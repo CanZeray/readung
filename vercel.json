@@ -1,7 +1,10 @@
 {
   "version": 2,
   "routes": [
-    { "src": "/home", "dest": "/home/index" },
+    { "src": "/home", "dest": "/" },
     { "handle": "filesystem" }
+  ],
+  "rewrites": [
+    { "source": "/home", "destination": "/" }
   ]
 } 
