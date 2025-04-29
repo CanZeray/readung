@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/home", "dest": "/home/" }
+  ]
+} 
