@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 
-// Stripe secret key (in a real application, this would be in environment variables)
-const stripe = new Stripe('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
+// Use environment variable for Stripe secret key
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

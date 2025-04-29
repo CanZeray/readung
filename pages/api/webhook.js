@@ -1,9 +1,9 @@
 import Stripe from 'stripe';
 import { buffer } from 'micro';
 
-// Stripe secret key (in a real application, this would be in environment variables)
-const stripe = new Stripe('sk_test_4eC39HqLyjWDarjtT1zdp7dc');
-const webhookSecret = 'whsec_your_webhook_secret_key';
+// Use environment variables for Stripe keys
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export const config = {
   api: {
