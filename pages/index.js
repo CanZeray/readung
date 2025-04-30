@@ -1,19 +1,26 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
   const router = useRouter();
-  const { currentUser } = useAuth();
+  const { currentUser, error } = useAuth();
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
+    // Handle Firebase errors gracefully
+    if (error) {
+      console.error("Auth error:", error);
+      setAuthError(error);
+    }
+    
     // Giriş yapmış kullanıcıyı home sayfasına yönlendir
     if (currentUser) {
       router.push('/home');
     }
-  }, [currentUser, router]);
+  }, [currentUser, router, error]);
 
   return (
     <div className="min-h-screen">
@@ -29,6 +36,13 @@ export default function Home() {
           <p className="text-xl mb-8 max-w-2xl">
             Improve your German language skills by reading stories appropriate for your level.
           </p>
+          
+          {authError && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+              <p>Firebase setup error. Please try again later.</p>
+            </div>
+          )}
+          
           <div className="flex gap-4">
             <Link href="/auth/login" className="btn btn-primary">
               Log In

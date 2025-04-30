@@ -6,7 +6,7 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import app, { getFirebaseAuth, getFirebaseDb } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
@@ -23,10 +23,10 @@ export function AuthProvider({ children }) {
   // Kayıt olma fonksiyonu
   async function signup(email, password, name) {
     try {
-      const auth = getFirebaseAuth();
       if (!auth) {
-        setError('Firebase authentication is not available');
-        throw new Error('Firebase authentication is not available');
+        const errorMsg = 'Firebase authentication is not available';
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
       
       // Firebase Auth ile kullanıcı oluştur
@@ -37,10 +37,10 @@ export function AuthProvider({ children }) {
         displayName: name
       });
       
-      const db = getFirebaseDb();
       if (!db) {
-        setError('Firebase database is not available');
-        throw new Error('Firebase database is not available');
+        const errorMsg = 'Firebase database is not available';
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
       
       // Firestore'da kullanıcı dökümanı oluştur
@@ -65,12 +65,12 @@ export function AuthProvider({ children }) {
   // Giriş yapma fonksiyonu
   async function login(email, password) {
     try {
-      const auth = getFirebaseAuth();
       if (!auth) {
-        setError('Firebase authentication is not available');
-        throw new Error('Firebase authentication is not available');
+        const errorMsg = 'Firebase authentication is not available';
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
-      return signInWithEmailAndPassword(auth, email, password);
+      return await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       setError(error.message);
       throw error;
@@ -80,12 +80,12 @@ export function AuthProvider({ children }) {
   // Çıkış yapma fonksiyonu
   async function logout() {
     try {
-      const auth = getFirebaseAuth();
       if (!auth) {
-        setError('Firebase authentication is not available');
-        throw new Error('Firebase authentication is not available');
+        const errorMsg = 'Firebase authentication is not available';
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
-      return signOut(auth);
+      return await signOut(auth);
     } catch (error) {
       setError(error.message);
       throw error;
@@ -97,10 +97,10 @@ export function AuthProvider({ children }) {
     if (!currentUser) return null;
     
     try {
-      const db = getFirebaseDb();
       if (!db) {
-        setError('Firebase database is not available');
-        throw new Error('Firebase database is not available');
+        const errorMsg = 'Firebase database is not available';
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
       
       const docRef = doc(db, "users", currentUser.uid);
@@ -120,7 +120,6 @@ export function AuthProvider({ children }) {
 
   // Auth durumu değişince çalış
   useEffect(() => {
-    const auth = getFirebaseAuth();
     if (!auth) {
       setLoading(false);
       setError('Firebase authentication is not available');
