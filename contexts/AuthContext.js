@@ -6,7 +6,7 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import { auth, db } from '../lib/firebase';
+import app, { getFirebaseAuth, getFirebaseDb } from '../lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
@@ -18,10 +18,17 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Kayıt olma fonksiyonu
   async function signup(email, password, name) {
     try {
+      const auth = getFirebaseAuth();
+      if (!auth) {
+        setError('Firebase authentication is not available');
+        throw new Error('Firebase authentication is not available');
+      }
+      
       // Firebase Auth ile kullanıcı oluştur
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
@@ -29,6 +36,12 @@ export function AuthProvider({ children }) {
       await updateProfile(userCredential.user, {
         displayName: name
       });
+      
+      const db = getFirebaseDb();
+      if (!db) {
+        setError('Firebase database is not available');
+        throw new Error('Firebase database is not available');
+      }
       
       // Firestore'da kullanıcı dökümanı oluştur
       await setDoc(doc(db, "users", userCredential.user.uid), {
@@ -44,18 +57,39 @@ export function AuthProvider({ children }) {
       
       return userCredential.user;
     } catch (error) {
+      setError(error.message);
       throw error;
     }
   }
   
   // Giriş yapma fonksiyonu
-  function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+  async function login(email, password) {
+    try {
+      const auth = getFirebaseAuth();
+      if (!auth) {
+        setError('Firebase authentication is not available');
+        throw new Error('Firebase authentication is not available');
+      }
+      return signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
   }
   
   // Çıkış yapma fonksiyonu
-  function logout() {
-    return signOut(auth);
+  async function logout() {
+    try {
+      const auth = getFirebaseAuth();
+      if (!auth) {
+        setError('Firebase authentication is not available');
+        throw new Error('Firebase authentication is not available');
+      }
+      return signOut(auth);
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
   }
   
   // Kullanıcı bilgisini güncelleme
@@ -63,6 +97,12 @@ export function AuthProvider({ children }) {
     if (!currentUser) return null;
     
     try {
+      const db = getFirebaseDb();
+      if (!db) {
+        setError('Firebase database is not available');
+        throw new Error('Firebase database is not available');
+      }
+      
       const docRef = doc(db, "users", currentUser.uid);
       const docSnap = await getDoc(docRef);
       
@@ -73,12 +113,20 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("Error getting user data:", error);
+      setError(error.message);
       return null;
     }
   }
 
   // Auth durumu değişince çalış
   useEffect(() => {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      setLoading(false);
+      setError('Firebase authentication is not available');
+      return () => {};
+    }
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       setLoading(false);
@@ -92,7 +140,8 @@ export function AuthProvider({ children }) {
     signup,
     login,
     logout,
-    getUserData
+    getUserData,
+    error
   };
 
   return (
