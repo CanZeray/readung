@@ -57,7 +57,8 @@ export function AuthProvider({ children }) {
       
       return userCredential.user;
     } catch (error) {
-      setError(error.message);
+      console.error("Signup error:", error);
+      setError(error.message || "An error occurred during signup");
       throw error;
     }
   }
@@ -72,7 +73,8 @@ export function AuthProvider({ children }) {
       }
       return await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      setError(error.message);
+      console.error("Login error:", error);
+      setError(error.message || "An error occurred during login");
       throw error;
     }
   }
@@ -87,7 +89,8 @@ export function AuthProvider({ children }) {
       }
       return await signOut(auth);
     } catch (error) {
-      setError(error.message);
+      console.error("Logout error:", error);
+      setError(error.message || "An error occurred during logout");
       throw error;
     }
   }
@@ -113,25 +116,33 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("Error getting user data:", error);
-      setError(error.message);
+      setError(error.message || "An error occurred while getting user data");
       return null;
     }
   }
 
   // Auth durumu değişince çalış
   useEffect(() => {
-    if (!auth) {
+    try {
+      if (!auth) {
+        console.warn("Firebase auth is not available");
+        setLoading(false);
+        setError('Firebase authentication is not available');
+        return () => {};
+      }
+      
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        setCurrentUser(user);
+        setLoading(false);
+      });
+      
+      return unsubscribe;
+    } catch (error) {
+      console.error("Auth state error:", error);
       setLoading(false);
-      setError('Firebase authentication is not available');
+      setError(error.message || "An error occurred in authentication");
       return () => {};
     }
-    
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      setLoading(false);
-    });
-    
-    return unsubscribe;
   }, []);
 
   const value = {
