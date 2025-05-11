@@ -85,6 +85,16 @@ export function AuthProvider({ children }) {
         setError(errorMsg);
         throw new Error(errorMsg);
       }
+      
+      // reCAPTCHA hatası için koruma
+      if (auth._getRecaptchaConfig === undefined) {
+        console.warn("reCAPTCHA issue detected, using workaround");
+        // Basit bir polyfill tanımlama
+        auth._getRecaptchaConfig = function() {
+          return null;
+        };
+      }
+      
       return await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       console.error("Login error:", error);

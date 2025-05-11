@@ -300,6 +300,7 @@ export default function ReadStory() {
   const [showAdModal, setShowAdModal] = useState(false);
   const [watchingAd, setWatchingAd] = useState(false);
   const [adCompleted, setAdCompleted] = useState(false);
+  const [adTimer, setAdTimer] = useState(0); // sayaç için
 
   // Tek/çift tıklama çakışmasını önlemek için timer
   let clickTimer = null;
@@ -540,34 +541,30 @@ export default function ReadStory() {
       if (!querySnapshot.empty) {
         const existingTranslation = querySnapshot.docs[0].data();
         setTranslatedWord(existingTranslation.translation);
-        
-        // Eğer kullanıcı bu çeviriyi daha önce görmemişse
-        if (!hasSeenTranslation) {
-          // Ücretsiz kullanıcılar için çeviri limiti kontrolü
-          if (userData.membershipType === 'free' && translationsToday >= 10) {
-            setShowAdModal(true);
-            return;
-          }
-          
-          // Kullanıcının gördüğü çeviriler listesine ekle
-          const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
-          
-          // Kullanıcının çeviri sayısını güncelle (sadece ücretsiz kullanıcılar için)
-          if (userData.membershipType === 'free') {
-            const newTranslationsToday = translationsToday + 1;
-            setTranslationsToday(newTranslationsToday);
-            
-            // Veritabanını güncelle
-            await updateDoc(doc(db, "users", currentUser.uid), {
-              translationsToday: newTranslationsToday,
-              lastTranslationDate: new Date().toDateString(),
-              viewedTranslations: updatedViewedTranslations
-            });
-            
-            // Yerel state'i güncelle
-            const updatedUserData = { ...userData, viewedTranslations: updatedViewedTranslations };
-            setUserData(updatedUserData);
-          }
+
+        // Ücretsiz kullanıcılar için çeviri limiti kontrolü
+        if (userData.membershipType === 'free' && translationsToday >= 10) {
+          setShowAdModal(true);
+          setTranslationLoading(false);
+          return;
+        }
+
+        // Kullanıcının gördüğü çeviriler listesine ekle
+        const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
+
+        // Her çeviri için hak eksilt
+        if (userData.membershipType === 'free') {
+          const newTranslationsToday = translationsToday + 1;
+          setTranslationsToday(newTranslationsToday);
+
+          await updateDoc(doc(db, "users", currentUser.uid), {
+            translationsToday: newTranslationsToday,
+            lastTranslationDate: new Date().toDateString(),
+            viewedTranslations: updatedViewedTranslations
+          });
+
+          const updatedUserData = { ...userData, viewedTranslations: updatedViewedTranslations };
+          setUserData(updatedUserData);
         }
       } else {
         // Kelime daha önce çevrilmemişse
@@ -668,28 +665,29 @@ Keep each section clear, short, and consistent.
   // Reklam izleme fonksiyonu
   const handleWatchAd = async () => {
     setWatchingAd(true);
-    
-    // Gerçek bir reklam entegrasyonu yerine simülasyon yapıyoruz
-    // Normalde burada AdMob, Unity Ads vb. reklam SDK'ları kullanılır
-    setTimeout(async () => {
+    setAdTimer(30); // 30 saniye başlat
+  };
+
+  // Sayaç efekti
+  useEffect(() => {
+    if (watchingAd && adTimer > 0) {
+      const timer = setTimeout(() => setAdTimer(adTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+    if (watchingAd && adTimer === 0) {
+      // Süre bitince hak ver
       setWatchingAd(false);
       setAdCompleted(true);
-      
-      // Kullanıcıya 10 çeviri hakkı daha ver
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        translationsToday: 0 // veya 10 çeviriden devam etmesi için: translationsToday - 10
+      updateDoc(doc(db, "users", currentUser.uid), {
+        translationsToday: 0
       });
-      
-      // State'i güncelle
-      setTranslationsToday(0); // veya 10 çeviriden devam etmesi için: translationsToday - 10
-      
-      // 3 saniye sonra modal'ı kapat
+      setTranslationsToday(0);
       setTimeout(() => {
         setShowAdModal(false);
         setAdCompleted(false);
       }, 3000);
-    }, 5000); // 5 saniyelik "reklam izleme" simülasyonu
-  };
+    }
+  }, [watchingAd, adTimer]);
 
   // Reklam izleme modalını kapat
   const handleCloseAdModal = () => {
@@ -721,24 +719,25 @@ Keep each section clear, short, and consistent.
     router.push(`/stories/${storyLevel}`);
   };
 
-  // Çeviri butonunun pozisyonunu ekrana göre ayarla
+  // Çeviri butonunun pozisyonunu kelimenin hemen altına ve ekrandan taşmayacak şekilde ayarla
   const getTranslationButtonPosition = () => {
     const buttonHeight = 40;
     const buttonWidth = 100;
     let left = translationPosition.x;
-    let top = translationPosition.y + 10;
+    let top = translationPosition.y + 8; // kelimenin hemen altı
 
     // Ekrandan taşmayı engelle
     if (typeof window !== 'undefined') {
       if (left + buttonWidth > window.innerWidth) {
         left = window.innerWidth - buttonWidth - 16;
       }
+      if (left < 0) left = 8;
       if (top + buttonHeight > window.innerHeight) {
-        top = translationPosition.y - buttonHeight - 10;
-        if (top < 0) top = 10;
+        top = translationPosition.y - buttonHeight - 8;
+        if (top < 0) top = 8;
       }
     }
-    return { left, top };
+    return { left, top, position: 'absolute' };
   };
 
   // Hikayeyi tamamlandı olarak işaretle
@@ -939,10 +938,34 @@ Keep each section clear, short, and consistent.
       
       {/* Çeviri butonu */}
       {showTranslateButton && (
-        <div 
-          className="translation-button fixed bg-blue-600 text-white px-3 py-1 rounded-md shadow-md cursor-pointer z-50 hover:bg-blue-700"
-          style={getTranslationButtonPosition()}
+        <div
+          className="translation-button"
+          style={{
+            ...getTranslationButtonPosition(),
+            zIndex: 1000,
+            background: '#2563eb', // mavi
+            color: 'white',
+            borderRadius: 8,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+            padding: '6px 18px',
+            fontWeight: 500,
+            fontSize: 16,
+            cursor: 'pointer',
+            transition: 'background 0.2s, color 0.2s',
+            border: 'none',
+            minWidth: 90,
+            textAlign: 'center',
+            userSelect: 'none',
+          }}
           onClick={handleTranslate}
+          onMouseOver={e => {
+            e.currentTarget.style.background = '#1d4ed8';
+            e.currentTarget.style.color = '#fff';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = '#2563eb';
+            e.currentTarget.style.color = '#fff';
+          }}
         >
           Translate
         </div>
@@ -1123,7 +1146,15 @@ Keep each section clear, short, and consistent.
                 <p className="mb-6 text-gray-600" style={{ lineHeight: '1.5', fontSize: '16px' }}>
                   You've reached your free daily translation limit (10 translations). Watch a short ad to unlock 10 more translations.
                 </p>
-                
+
+                {/* Google AdSense Reklam Alanı */}
+                <div className="flex justify-center mb-4">
+                  <ins className="adsbygoogle"
+                    style={{ display: 'block', width: 320, height: 100 }}
+                    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                    data-ad-slot="1234567890"
+                  ></ins>
+                </div>
                 <button
                   onClick={handleWatchAd}
                   className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg mb-3 font-medium"
@@ -1135,7 +1166,7 @@ Keep each section clear, short, and consistent.
                   onClick={handleCloseAdModal}
                   className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg mb-4 font-medium"
                 >
-                  Cancel
+                  Vazgeç
                 </button>
                 
                 <div className="text-center">
@@ -1151,8 +1182,8 @@ Keep each section clear, short, and consistent.
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <h3 className="text-lg font-medium mb-2">Loading Ad</h3>
-                <p className="text-gray-600">Please wait...</p>
+                <h3 className="text-lg font-medium mb-2">Ad is playing...</h3>
+                <p className="text-gray-600">Please wait {adTimer} seconds.</p>
               </div>
             ) : (
               <div className="text-center py-4">
