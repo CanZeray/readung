@@ -584,7 +584,7 @@ export default function ReadStory() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer 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`
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
             model: 'gpt-3.5-turbo',
