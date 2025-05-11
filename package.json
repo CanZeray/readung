@@ -1,0 +1,39 @@
+{
+  "name": "readungapp2",
+  "version": "1.0.0",
+  "description": "German story reading app with different levels",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed": "node scripts/seed-stories.js",
+    "admin-seed": "node scripts/manual-seed.js"
+  },
+  "keywords": [
+    "german",
+    "language learning",
+    "stories",
+    "reading"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@stripe/stripe-js": "^2.2.0",
+    "@tailwindcss/forms": "^0.5.10",
+    "dotenv": "^16.4.5",
+    "firebase": "^9.22.0",
+    "firebase-admin": "^13.3.0",
+    "micro": "^10.0.1",
+    "next": "^14.2.28",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "stripe": "^14.2.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.0"
+  }
+}
