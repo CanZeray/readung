@@ -549,10 +549,7 @@ export default function ReadStory() {
           return;
         }
 
-        // Kullanıcının gördüğü çeviriler listesine ekle
-        const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
-
-        // Her çeviri için hak eksilt
+        // Her kullanıcı için her çeviride sayaç artmalı, daha önce görülmüş olsa bile
         if (userData.membershipType === 'free') {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
@@ -560,11 +557,9 @@ export default function ReadStory() {
           await updateDoc(doc(db, "users", currentUser.uid), {
             translationsToday: newTranslationsToday,
             lastTranslationDate: new Date().toDateString(),
-            viewedTranslations: updatedViewedTranslations
+            // Sadece daha önce görülmemişse ekle
+            ...(hasSeenTranslation ? {} : {viewedTranslations: arrayUnion(selectedWordForTranslation)})
           });
-
-          const updatedUserData = { ...userData, viewedTranslations: updatedViewedTranslations };
-          setUserData(updatedUserData);
         }
       } else {
         // Kelime daha önce çevrilmemişse
@@ -591,7 +586,7 @@ export default function ReadStory() {
                 content: `
 You are a professional German-to-English translator.
 
-When given a German word and its surrounding sentence, return:
+When given ANY German word (including prepositions, articles, conjunctions, pronouns, particles, proper names, etc.) and its surrounding sentence, return:
 
 Meaning: (the most accurate meaning in 1-2 words)
 Explanation: (a short explanation, maximum 2 sentences)
@@ -600,6 +595,8 @@ Grammatical role: (ALWAYS give a full, specific, context-based grammatical expla
 
 Always output ALL of these sections, no matter what.
 If no data is available, write "Not available" under that section — never skip or merge sections.
+
+VERY IMPORTANT: Even simple words like "zu", "und", "ein", "das", etc. MUST be translated properly. Never respond with "not available".
 
 If the surrounding sentence is missing or does not help, INVENT a simple context yourself to create the example sentence.
 
@@ -612,7 +609,7 @@ Keep each section clear, short, and consistent.
               }
             ],
             temperature: 0.3,
-            max_tokens: 120
+            max_tokens: 150
           })
         });
 
@@ -631,9 +628,6 @@ Keep each section clear, short, and consistent.
           timestamp: Timestamp.now()
         });
         
-        // Kullanıcının gördüğü çeviriler listesine ekle
-        const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
-        
         // Kullanıcının çeviri sayısını güncelle (sadece ücretsiz kullanıcılar için)
         if (userData.membershipType === 'free') {
           const newTranslationsToday = translationsToday + 1;
@@ -643,16 +637,13 @@ Keep each section clear, short, and consistent.
           await updateDoc(doc(db, "users", currentUser.uid), {
             translationsToday: newTranslationsToday,
             lastTranslationDate: new Date().toDateString(),
-            viewedTranslations: updatedViewedTranslations
+            viewedTranslations: arrayUnion(selectedWordForTranslation)
           });
-          
-          // Yerel state'i güncelle
-          const updatedUserData = { ...userData, viewedTranslations: updatedViewedTranslations };
-          setUserData(updatedUserData);
         }
         
         // Çeviriyi state'e kaydet
         setTranslatedWord(translatedWord);
+        console.log("State'e aktarılan çeviri:", translatedWord);
       }
     } catch (error) {
       console.error('Translation error:', error);
@@ -1021,6 +1012,7 @@ Keep each section clear, short, and consistent.
             </div>
           ) : (
             <div className="mt-1" style={{lineHeight: '1.7'}}>
+              {console.log("Rendering translation:", translatedWord)}
               {(() => {
                 // Meaning için esnek ve fallback
                 let meaning = '';
@@ -1154,6 +1146,11 @@ Keep each section clear, short, and consistent.
                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
                     data-ad-slot="1234567890"
                   ></ins>
+                  <script dangerouslySetInnerHTML={{
+                    __html: `
+                      (adsbygoogle = window.adsbygoogle || []).push({});
+                    `
+                  }}/>
                 </div>
                 <button
                   onClick={handleWatchAd}
@@ -1166,7 +1163,7 @@ Keep each section clear, short, and consistent.
                   onClick={handleCloseAdModal}
                   className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg mb-4 font-medium"
                 >
-                  Vazgeç
+                  Cancel
                 </button>
                 
                 <div className="text-center">
@@ -1184,6 +1181,20 @@ Keep each section clear, short, and consistent.
                 </svg>
                 <h3 className="text-lg font-medium mb-2">Ad is playing...</h3>
                 <p className="text-gray-600">Please wait {adTimer} seconds.</p>
+                {/* Gerçek bir video reklamı gösterilir - basitleştirilmiş örnek */}
+                <div className="mb-3 relative bg-gray-100 rounded-lg overflow-hidden" style={{height: '180px'}}>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="mx-auto h-16 w-16 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500">Ad Video Placeholder</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-4">

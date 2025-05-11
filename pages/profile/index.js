@@ -120,6 +120,16 @@ export default function Profile() {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <button
+          onClick={() => router.push('/home')}
+          className="flex items-center gap-2 text-blue-500 hover:text-blue-700 transition-colors mb-4"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Ana Sayfaya Dön
+        </button>
+        
         <div className="bg-gradient-to-r from-[#4facfe] to-[#00f2fe] rounded-t-lg p-6 text-white shadow-sm">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
