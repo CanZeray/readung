@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { db } from '../../../lib/firebase';
-import { doc, getDoc, updateDoc, arrayUnion, Timestamp, collection, query, where, getDocs, addDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, Timestamp, collection, query, where, getDocs, addDoc, setDoc, limit } from 'firebase/firestore';
 
 // Mock story data
 const mockStoryContent = {
@@ -528,37 +528,25 @@ export default function ReadStory() {
     setShowTranslation(true);
     
     try {
-      // Önce Firestore'da kelimenin çevirisini ara
+      // Kelime veritabanında var mı kontrol et
       const translationsRef = collection(db, "translations");
-      const q = query(translationsRef, where("original", "==", selectedWordForTranslation));
+      const q = query(translationsRef, where("original", "==", selectedWordForTranslation), limit(1));
       const querySnapshot = await getDocs(q);
       
-      // Kullanıcının daha önce gördüğü çevirileri kontrol et
-      const userViewedTranslations = userData.viewedTranslations || [];
-      const hasSeenTranslation = userViewedTranslations.includes(selectedWordForTranslation);
-      
-      // Çeviri veritabanında var mı kontrol et
       if (!querySnapshot.empty) {
-        const existingTranslation = querySnapshot.docs[0].data();
-        setTranslatedWord(existingTranslation.translation);
-
-        // Ücretsiz kullanıcılar için çeviri limiti kontrolü
-        if (userData.membershipType === 'free' && translationsToday >= 10) {
-          setShowAdModal(true);
-          setTranslationLoading(false);
-          return;
-        }
-
-        // Her kullanıcı için her çeviride sayaç artmalı, daha önce görülmüş olsa bile
+        // Kelime daha önce çevrilmişse, veritabanından al
+        const doc = querySnapshot.docs[0];
+        setTranslatedWord(doc.data().translation);
+        
+        // Ücretsiz kullanıcılar için çeviri sayısını güncelle
         if (userData.membershipType === 'free') {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
-
+          
           await updateDoc(doc(db, "users", currentUser.uid), {
             translationsToday: newTranslationsToday,
             lastTranslationDate: new Date().toDateString(),
-            // Sadece daha önce görülmemişse ekle
-            ...(hasSeenTranslation ? {} : {viewedTranslations: arrayUnion(selectedWordForTranslation)})
+            viewedTranslations: arrayUnion(selectedWordForTranslation)
           });
         }
       } else {
@@ -571,53 +559,23 @@ export default function ReadStory() {
           return;
         }
         
-        // ChatGPT API ile çeviri yap
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // Kendi API endpoint'imizi kullanarak çeviri yap
+        const response = await fetch('/api/translate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY || 'YOUR_API_KEY_HERE'}`
           },
           body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
-            messages: [
-              {
-                role: 'system',
-                content: `
-You are a professional German-to-English translator.
-
-When given ANY German word (including prepositions, articles, conjunctions, pronouns, particles, proper names, etc.) and its surrounding sentence, return:
-
-Meaning: (the most accurate meaning in 1-2 words)
-Explanation: (a short explanation, maximum 2 sentences)
-Example sentence: (ALWAYS provide an ENGLISH sentence using the meaning of the word, even if you have to MAKE ONE UP)
-Grammatical role: (ALWAYS give a full, specific, context-based grammatical explanation. NEVER say "see explanation above", NEVER just write "noun" or "verb". Always explain the grammatical function in the sentence, even if you have to invent details. If you skip the grammatical role section, repeat the header and write 'Not available'. Never merge with explanation. Always use the header.)
-
-Always output ALL of these sections, no matter what.
-If no data is available, write "Not available" under that section — never skip or merge sections.
-
-VERY IMPORTANT: Even simple words like "zu", "und", "ein", "das", etc. MUST be translated properly. Never respond with "not available".
-
-If the surrounding sentence is missing or does not help, INVENT a simple context yourself to create the example sentence.
-
-Keep each section clear, short, and consistent.
-`
-              },
-              {
-                role: 'user',
-                content: `Word: "${selectedWordForTranslation}"\nSentence: "${story?.content || ''}"`
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 150
+            word: selectedWordForTranslation,
+            context: story?.content || ''
           })
         });
 
         const data = await response.json();
-        console.log("OpenAI ham yanıt:", data);
+        console.log("OpenAI ham yanıt:", data.raw);
 
-        // Yanıtın tamamı geliyor mu kontrol et
-        const translatedWord = data.choices?.[0]?.message?.content?.trim() || '';
+        // Çeviri metnini al
+        const translatedWord = data.translation || '';
         console.log("Çeviri metni:", translatedWord);
 
         // Çeviriyi veritabanına kaydet
