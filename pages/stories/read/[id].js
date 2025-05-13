@@ -1097,19 +1097,7 @@ export default function ReadStory() {
                   You've reached your free daily translation limit (10 translations). Watch a short ad to unlock 10 more translations.
                 </p>
 
-                {/* Google AdSense Reklam Alanı */}
-                <div className="flex justify-center mb-4">
-                  <ins className="adsbygoogle"
-                    style={{ display: 'block', width: 320, height: 100 }}
-                    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                    data-ad-slot="1234567890"
-                  ></ins>
-                  <script dangerouslySetInnerHTML={{
-                    __html: `
-                      (adsbygoogle = window.adsbygoogle || []).push({});
-                    `
-                  }}/>
-                </div>
+                                {/* Premium Upgrade Banner */}                <div className="flex justify-center mb-4 p-4 bg-blue-50 rounded-lg">                  <div className="text-center">                    <h4 className="text-lg font-semibold mb-2">Upgrade to Premium</h4>                    <p className="text-sm text-gray-600 mb-2">Get unlimited translations and no ads</p>                    <Link href="/upgrade/premium" className="text-blue-600 hover:underline">                      Learn More →                    </Link>                  </div>                </div>
                 <button
                   onClick={handleWatchAd}
                   className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg mb-3 font-medium"
