@@ -528,6 +528,12 @@ export default function ReadStory() {
     setShowTranslation(true);
     
     try {
+      // Ücretsiz kullanıcılar için çeviri limiti kontrolü
+      if (userData?.membershipType === 'free' && translationsToday >= 10) {
+        setShowAdModal(true);
+        return;
+      }
+
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: {
@@ -539,18 +545,18 @@ export default function ReadStory() {
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Translation request failed');
-      }
-
       const data = await response.json();
-      console.log("API Response:", data);
+      console.log("Translation API Response:", data);
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Translation failed');
       }
 
-      setTranslatedWord(data.translation || 'Translation not available');
+      if (!data.translation) {
+        throw new Error('No translation received');
+      }
+
+      setTranslatedWord(data.translation);
       
       // Ücretsiz kullanıcılar için çeviri sayısını güncelle
       if (userData?.membershipType === 'free') {
@@ -566,7 +572,7 @@ export default function ReadStory() {
 
     } catch (error) {
       console.error('Translation error:', error);
-      setTranslatedWord('Error translating word');
+      setTranslatedWord('Error translating word: ' + error.message);
     } finally {
       setTranslationLoading(false);
     }

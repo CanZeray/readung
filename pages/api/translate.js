@@ -13,7 +13,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Word is required' });
     }
 
-    // API anahtarını güvenli şekilde kullan
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error('OpenAI API key is not configured');
@@ -30,7 +29,7 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: `You are a professional German-to-English translator. Analyze the given German word and provide:
+            content: `You are a professional German-to-English translator. When given a German word, provide:
             - Meaning: (English translation)
             - Explanation: (Brief explanation of usage)
             - Example sentence: (A simple German example)
@@ -38,7 +37,7 @@ export default async function handler(req, res) {
           },
           {
             role: 'user',
-            content: `Word: "${word}"${context ? `\nContext: "${context}"` : ''}`
+            content: `Translate this German word: "${word}"${context ? `. Context: "${context}"` : ''}`
           }
         ],
         temperature: 0.3,
@@ -49,10 +48,11 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('OpenAI API error:', data);
       throw new Error(data.error?.message || 'Translation failed');
     }
 
-    const translation = data.choices[0].message.content.trim();
+    const translation = data.choices[0].message.content;
 
     return res.status(200).json({
       translation,
@@ -61,9 +61,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Translation error:', error);
-    return res.status(500).json({ 
-      error: 'Translation failed', 
-      message: error.message 
+    return res.status(500).json({
+      error: 'Translation failed',
+      message: error.message
     });
   }
 } 
