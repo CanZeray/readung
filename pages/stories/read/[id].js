@@ -528,81 +528,42 @@ export default function ReadStory() {
     setShowTranslation(true);
     
     try {
-      // Kelime veritabanında var mı kontrol et
-      const translationsRef = collection(db, "translations");
-      const q = query(translationsRef, where("original", "==", selectedWordForTranslation), limit(1));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        // Kelime daha önce çevrilmişse, veritabanından al
-        const doc = querySnapshot.docs[0];
-        setTranslatedWord(doc.data().translation);
-        
-        // Ücretsiz kullanıcılar için çeviri sayısını güncelle
-        if (userData.membershipType === 'free') {
-          const newTranslationsToday = translationsToday + 1;
-          setTranslationsToday(newTranslationsToday);
-          
-          await updateDoc(doc(db, "users", currentUser.uid), {
-            translationsToday: newTranslationsToday,
-            lastTranslationDate: new Date().toDateString(),
-            viewedTranslations: arrayUnion(selectedWordForTranslation)
-          });
-        }
-      } else {
-        // Kelime daha önce çevrilmemişse
-        
-        // Ücretsiz kullanıcılar için çeviri limiti kontrolü
-        if (userData.membershipType === 'free' && translationsToday >= 10) {
-          setShowAdModal(true);
-          setTranslationLoading(false);
-          return;
-        }
-        
-        // Kendi API endpoint'imizi kullanarak çeviri yap
-        const response = await fetch('/api/translate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            word: selectedWordForTranslation,
-            context: story?.content || ''
-          })
-        });
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          word: selectedWordForTranslation,
+          context: story?.content || ''
+        })
+      });
 
-        const data = await response.json();
-        console.log("OpenAI ham yanıt:", data.raw);
-
-        // Çeviri metnini al
-        const translatedWord = data.translation || '';
-        console.log("Çeviri metni:", translatedWord);
-
-        // Çeviriyi veritabanına kaydet
-        await addDoc(collection(db, "translations"), {
-          original: selectedWordForTranslation,
-          translation: translatedWord,
-          context: story?.content || '',
-          timestamp: Timestamp.now()
-        });
-        
-        // Kullanıcının çeviri sayısını güncelle (sadece ücretsiz kullanıcılar için)
-        if (userData.membershipType === 'free') {
-          const newTranslationsToday = translationsToday + 1;
-          setTranslationsToday(newTranslationsToday);
-          
-          // Veritabanını güncelle
-          await updateDoc(doc(db, "users", currentUser.uid), {
-            translationsToday: newTranslationsToday,
-            lastTranslationDate: new Date().toDateString(),
-            viewedTranslations: arrayUnion(selectedWordForTranslation)
-          });
-        }
-        
-        // Çeviriyi state'e kaydet
-        setTranslatedWord(translatedWord);
-        console.log("State'e aktarılan çeviri:", translatedWord);
+      if (!response.ok) {
+        throw new Error('Translation request failed');
       }
+
+      const data = await response.json();
+      console.log("API Response:", data);
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setTranslatedWord(data.translation || 'Translation not available');
+      
+      // Ücretsiz kullanıcılar için çeviri sayısını güncelle
+      if (userData?.membershipType === 'free') {
+        const newTranslationsToday = translationsToday + 1;
+        setTranslationsToday(newTranslationsToday);
+        
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          translationsToday: newTranslationsToday,
+          lastTranslationDate: new Date().toDateString(),
+          viewedTranslations: arrayUnion(selectedWordForTranslation)
+        });
+      }
+
     } catch (error) {
       console.error('Translation error:', error);
       setTranslatedWord('Error translating word');
