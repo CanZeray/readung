@@ -45,6 +45,38 @@
   }
 }
 
+/* Ana sayfa butonları için özel tasarım */
+.auth-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.auth-buttons .btn {
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  background-color: #007bff;
+  color: white;
+}
+
+.auth-buttons .btn:hover {
+  background-color: #0056b3;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.auth-buttons .btn-secondary {
+  background-color: #28a745;
+}
+
+.auth-buttons .btn-secondary:hover {
+  background-color: #1e7e34;
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+
 /* Fade-in Animation */
 @keyframes fadeIn {
   from { opacity: 0; }
