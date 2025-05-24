@@ -550,16 +550,13 @@ export default function ReadStory() {
         const existingTranslation = querySnapshot.docs[0].data();
         setTranslatedWord(existingTranslation.translation);
         
-        // Her çeviri isteği için limit artır (ücretsiz kullanıcılar için)
-        if (userData.membershipType === 'free') {
+        // Eğer kullanıcı bu çeviriyi daha önce görmemişse limit artır
+        if (!hasSeenTranslation && userData.membershipType === 'free') {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
           
-          // Kullanıcının gördüğü çeviriler listesine ekle (eğer daha önce görmediyse)
-          let updatedViewedTranslations = userViewedTranslations;
-          if (!hasSeenTranslation) {
-            updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
-          }
+          // Kullanıcının gördüğü çeviriler listesine ekle
+          const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
           
           // Veritabanını güncelle
           await updateDoc(doc(db, "users", currentUser.uid), {
@@ -628,13 +625,13 @@ Keep each section clear, short, and consistent.
           timestamp: Timestamp.now()
         });
         
-        // Kullanıcının gördüğü çeviriler listesine ekle
-        const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
-        
-        // Kullanıcının çeviri sayısını güncelle (sadece ücretsiz kullanıcılar için)
+        // Yeni çeviri için her zaman limit artır ve listeye ekle (ücretsiz kullanıcılar için)
         if (userData.membershipType === 'free') {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
+          
+          // Kullanıcının gördüğü çeviriler listesine ekle
+          const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
           
           // Veritabanını güncelle
           await updateDoc(doc(db, "users", currentUser.uid), {
