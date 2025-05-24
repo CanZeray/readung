@@ -320,18 +320,6 @@ export default function ReadStory() {
           return;
         }
         
-        // Eğer viewedTranslations alanı yoksa, boş dizi olarak ekle
-        if (!userDataResult.viewedTranslations) {
-          userDataResult.viewedTranslations = [];
-          
-          // Veritabanını güncelle
-          await updateDoc(doc(db, "users", currentUser.uid), {
-            viewedTranslations: []
-          });
-        }
-        
-        setUserData(userDataResult);
-        
         // Günlük kelime kayıt ve çeviri sayısını belirle
         const today = new Date().toDateString();
         const lastSaveDate = userDataResult.lastWordSaveDate || '';
@@ -408,6 +396,28 @@ export default function ReadStory() {
           alert('Story not found');
           router.push('/home');
         }
+
+        // Eğer translationHistory alanı yoksa, eski viewedTranslations'dan migrate et
+        if (!userDataResult.translationHistory) {
+          const now = new Date().toISOString();
+          const translationHistory = {};
+          
+          // Eski viewedTranslations verilerini yeni formata çevir
+          if (userDataResult.viewedTranslations && Array.isArray(userDataResult.viewedTranslations)) {
+            userDataResult.viewedTranslations.forEach(word => {
+              translationHistory[word] = now; // Tümünü bugün olarak işaretle
+            });
+          }
+          
+          userDataResult.translationHistory = translationHistory;
+          
+          // Veritabanını güncelle
+          await updateDoc(doc(db, "users", currentUser.uid), {
+            translationHistory: translationHistory
+          });
+        }
+        
+        setUserData(userDataResult);
       } catch (error) {
         console.error("Error fetching story:", error);
       } finally {
@@ -541,32 +551,43 @@ export default function ReadStory() {
       const q = query(translationsRef, where("original", "==", selectedWordForTranslation));
       const querySnapshot = await getDocs(q);
       
-      // Kullanıcının daha önce gördüğü çevirileri kontrol et
-      const userViewedTranslations = userData.viewedTranslations || [];
-      const hasSeenTranslation = userViewedTranslations.includes(selectedWordForTranslation);
+      // Kullanıcının çeviri geçmişini kontrol et (24 saatlik süre kontrolü)
+      const userTranslationHistory = userData.translationHistory || {};
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      // Bu kelimeyi daha önce çevirmiş mi ve 24 saat geçmiş mi kontrol et
+      const lastTranslationTime = userTranslationHistory[selectedWordForTranslation];
+      const hasRecentTranslation = lastTranslationTime && new Date(lastTranslationTime) > twentyFourHoursAgo;
       
       // Çeviri veritabanında var mı kontrol et
       if (!querySnapshot.empty) {
         const existingTranslation = querySnapshot.docs[0].data();
         setTranslatedWord(existingTranslation.translation);
         
-        // Eğer kullanıcı bu çeviriyi daha önce görmemişse limit artır
-        if (!hasSeenTranslation && userData.membershipType === 'free') {
+        // Eğer kullanıcı bu çeviriyi 24 saat içinde görmemişse limit artır
+        if (!hasRecentTranslation && userData.membershipType === 'free') {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
           
-          // Kullanıcının gördüğü çeviriler listesine ekle
-          const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
+          // Kullanıcının çeviri geçmişini güncelle
+          const updatedTranslationHistory = {
+            ...userTranslationHistory,
+            [selectedWordForTranslation]: now.toISOString()
+          };
           
           // Veritabanını güncelle
           await updateDoc(doc(db, "users", currentUser.uid), {
             translationsToday: newTranslationsToday,
             lastTranslationDate: new Date().toDateString(),
-            viewedTranslations: updatedViewedTranslations
+            translationHistory: updatedTranslationHistory
           });
           
           // Yerel state'i güncelle
-          const updatedUserData = { ...userData, viewedTranslations: updatedViewedTranslations };
+          const updatedUserData = { 
+            ...userData, 
+            translationHistory: updatedTranslationHistory 
+          };
           setUserData(updatedUserData);
         }
       } else {
@@ -640,18 +661,24 @@ Grammatical role: Not available
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
           
-          // Kullanıcının gördüğü çeviriler listesine ekle
-          const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
+          // Kullanıcının çeviri geçmişini güncelle
+          const updatedTranslationHistory = {
+            ...userTranslationHistory,
+            [selectedWordForTranslation]: now.toISOString()
+          };
           
           // Veritabanını güncelle
           await updateDoc(doc(db, "users", currentUser.uid), {
             translationsToday: newTranslationsToday,
             lastTranslationDate: new Date().toDateString(),
-            viewedTranslations: updatedViewedTranslations
+            translationHistory: updatedTranslationHistory
           });
           
           // Yerel state'i güncelle
-          const updatedUserData = { ...userData, viewedTranslations: updatedViewedTranslations };
+          const updatedUserData = { 
+            ...userData, 
+            translationHistory: updatedTranslationHistory 
+          };
           setUserData(updatedUserData);
         }
         
