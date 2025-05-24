@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
@@ -43,13 +42,9 @@ export default function Home() {
             </div>
           )}
           
-          <div className="flex gap-4">
-            <Link href="/auth/login" className="btn btn-primary">
-              Log In
-            </Link>
-            <Link href="/auth/register" className="btn btn-secondary">
-              Sign Up
-            </Link>
+          <div className="auth-buttons">
+            <a href="/auth/login" className="btn">Log In</a>
+            <a href="/auth/register" className="btn btn-secondary">Sign Up</a>
           </div>
         </div>
       </main>
