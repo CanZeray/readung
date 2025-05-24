@@ -525,11 +525,18 @@ export default function ReadStory() {
     if (!selectedWordForTranslation) return;
     
     setTranslationLoading(true);
-    setShowTranslateButton(false);
-    setShowTranslation(true);
     
     try {
-      // Önce Firestore'da kelimenin çevirisini ara
+      // Ücretsiz kullanıcılar için çeviri limiti kontrolü (önce kontrol et)
+      if (userData.membershipType === 'free' && translationsToday >= 10) {
+        setShowAdModal(true);
+        setTranslationLoading(false);
+        return;
+      }
+      
+      setShowTranslation(true);
+      
+      // Çeviri veritabanında arama yap
       const translationsRef = collection(db, "translations");
       const q = query(translationsRef, where("original", "==", selectedWordForTranslation));
       const querySnapshot = await getDocs(q);
@@ -543,45 +550,30 @@ export default function ReadStory() {
         const existingTranslation = querySnapshot.docs[0].data();
         setTranslatedWord(existingTranslation.translation);
         
-        // Eğer kullanıcı bu çeviriyi daha önce görmemişse
-        if (!hasSeenTranslation) {
-          // Ücretsiz kullanıcılar için çeviri limiti kontrolü
-          if (userData.membershipType === 'free' && translationsToday >= 10) {
-            setShowAdModal(true);
-            return;
+        // Her çeviri isteği için limit artır (ücretsiz kullanıcılar için)
+        if (userData.membershipType === 'free') {
+          const newTranslationsToday = translationsToday + 1;
+          setTranslationsToday(newTranslationsToday);
+          
+          // Kullanıcının gördüğü çeviriler listesine ekle (eğer daha önce görmediyse)
+          let updatedViewedTranslations = userViewedTranslations;
+          if (!hasSeenTranslation) {
+            updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
           }
           
-          // Kullanıcının gördüğü çeviriler listesine ekle
-          const updatedViewedTranslations = [...userViewedTranslations, selectedWordForTranslation];
+          // Veritabanını güncelle
+          await updateDoc(doc(db, "users", currentUser.uid), {
+            translationsToday: newTranslationsToday,
+            lastTranslationDate: new Date().toDateString(),
+            viewedTranslations: updatedViewedTranslations
+          });
           
-          // Kullanıcının çeviri sayısını güncelle (sadece ücretsiz kullanıcılar için)
-          if (userData.membershipType === 'free') {
-            const newTranslationsToday = translationsToday + 1;
-            setTranslationsToday(newTranslationsToday);
-            
-            // Veritabanını güncelle
-            await updateDoc(doc(db, "users", currentUser.uid), {
-              translationsToday: newTranslationsToday,
-              lastTranslationDate: new Date().toDateString(),
-              viewedTranslations: updatedViewedTranslations
-            });
-            
-            // Yerel state'i güncelle
-            const updatedUserData = { ...userData, viewedTranslations: updatedViewedTranslations };
-            setUserData(updatedUserData);
-          }
+          // Yerel state'i güncelle
+          const updatedUserData = { ...userData, viewedTranslations: updatedViewedTranslations };
+          setUserData(updatedUserData);
         }
       } else {
-        // Kelime daha önce çevrilmemişse
-        
-        // Ücretsiz kullanıcılar için çeviri limiti kontrolü
-        if (userData.membershipType === 'free' && translationsToday >= 10) {
-          setShowAdModal(true);
-          setTranslationLoading(false);
-          return;
-        }
-        
-        // ChatGPT API ile çeviri yap
+        // Kelime daha önce çevrilmemişse - ChatGPT API ile çeviri yap
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
