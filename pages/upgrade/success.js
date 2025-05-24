@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useStripe } from '@stripe/stripe-js';
+import { useStripe } from '@stripe/react-stripe-js';
 
 export default function Success() {
   const stripe = useStripe();
