@@ -571,11 +571,27 @@ export default function ReadStory() {
         }
       } else {
         // Kelime daha önce çevrilmemişse - ChatGPT API ile çeviri yap
+        console.log("OpenAI API Key kontrol:", process.env.NEXT_PUBLIC_OPENAI_API_KEY ? 'Mevcut' : 'Eksik');
+        
+        // Environment variable kontrol et
+        if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
+          setTranslatedWord(`
+Meaning: Translation service unavailable
+Explanation: OpenAI API key is not configured. Please contact the administrator to set up translation services.
+Example sentence: Not available
+Grammatical role: Not available
+          `);
+          setTranslationLoading(false);
+          return;
+        }
+        
+        console.log("Çevirisi yapılacak kelime:", selectedWordForTranslation);
+        
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`
           },
           body: JSON.stringify({
             model: 'gpt-3.5-turbo',
@@ -610,12 +626,51 @@ Keep each section clear, short, and consistent.
           })
         });
 
+        console.log("API Response Status:", response.status);
+        
+        if (!response.ok) {
+          console.error("API Response Error:", response.status, response.statusText);
+          const errorData = await response.text();
+          console.error("Error details:", errorData);
+          
+          let errorMessage = '';
+          if (response.status === 401) {
+            errorMessage = 'API key is invalid or expired';
+          } else if (response.status === 429) {
+            errorMessage = 'Translation service rate limit exceeded. Please try again later.';
+          } else if (response.status === 500) {
+            errorMessage = 'Translation service is temporarily unavailable';
+          } else {
+            errorMessage = `Translation service error (${response.status})`;
+          }
+          
+          setTranslatedWord(`
+Meaning: Service error
+Explanation: ${errorMessage}
+Example sentence: Not available  
+Grammatical role: Not available
+          `);
+          setTranslationLoading(false);
+          return;
+        }
+
         const data = await response.json();
         console.log("OpenAI ham yanıt:", data);
 
         // Yanıtın tamamı geliyor mu kontrol et
         const translatedWord = data.choices?.[0]?.message?.content?.trim() || '';
         console.log("Çeviri metni:", translatedWord);
+        
+        if (!translatedWord) {
+          setTranslatedWord(`
+Meaning: Translation failed
+Explanation: Empty response from translation service
+Example sentence: Not available
+Grammatical role: Not available
+          `);
+          setTranslationLoading(false);
+          return;
+        }
 
         // Çeviriyi veritabanına kaydet
         await addDoc(collection(db, "translations"), {
@@ -650,7 +705,22 @@ Keep each section clear, short, and consistent.
       }
     } catch (error) {
       console.error('Translation error:', error);
-      setTranslatedWord('Error translating word');
+      let errorMessage = 'Unknown translation error';
+      
+      if (error.message.includes('fetch')) {
+        errorMessage = 'Network connection error. Please check your internet connection.';
+      } else if (error.message.includes('JSON')) {
+        errorMessage = 'Invalid response from translation service';
+      } else if (error.name === 'TypeError') {
+        errorMessage = 'Translation service configuration error';
+      }
+      
+      setTranslatedWord(`
+Meaning: Error occurred
+Explanation: ${errorMessage}
+Example sentence: Not available
+Grammatical role: Not available
+      `);
     } finally {
       setTranslationLoading(false);
     }
