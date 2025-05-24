@@ -3,11 +3,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { Elements } from '@stripe/stripe-js';
-import { PaymentElement, useStripe, useElements } from '@stripe/stripe-js';
 
 // Stripe public key (normally would be in .env file)
 const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
