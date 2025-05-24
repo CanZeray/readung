@@ -1,4 +1,4 @@
-import { adminAuth, adminDb } from '../../lib/firebase-admin';
+import { auth } from '../../lib/firebase-admin';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -6,6 +6,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Firebase admin kontrol et
+    if (!auth) {
+      console.error('Firebase admin not initialized');
+      return res.status(500).json({ error: 'Authentication service not available' });
+    }
+
     // Firebase Auth token doğrulama
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    const decodedToken = await auth.verifyIdToken(token);
     const userId = decodedToken.uid;
 
     const { word, context } = req.body;
