@@ -592,19 +592,58 @@ export default function ReadStory() {
         }
       } else {
         // Kelime daha önce çevrilmemişse - ChatGPT API ile çeviri yap
+        console.log("OpenAI API Key kontrol:", process.env.NEXT_PUBLIC_OPENAI_API_KEY ? 'Mevcut' : 'Eksik');
+        
+        // Environment variable kontrol et
+        if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
+          setTranslatedWord(`
+Meaning: Translation service unavailable
+Explanation: OpenAI API key is not configured. Please contact the administrator to set up translation services.
+Example sentence: Not available
+Grammatical role: Not available
+          `);
+          setTranslationLoading(false);
+          return;
+        }
+        
         console.log("Çevirisi yapılacak kelime:", selectedWordForTranslation);
         
-        // Backend API'si üzerinden çeviri yap
-        const idToken = await currentUser.getIdToken();
-        const response = await fetch('/api/translate', {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            word: selectedWordForTranslation,
-            context: story?.content || ''
+            model: 'gpt-3.5-turbo',
+            messages: [
+              {
+                role: 'system',
+                content: `
+You are a professional German-to-English translator.
+
+When given a German word and its surrounding sentence, return:
+
+Meaning: (the most accurate meaning in 1-2 words)
+Explanation: (a short explanation, maximum 2 sentences)
+Example sentence: (ALWAYS provide an ENGLISH sentence using the meaning of the word, even if you have to MAKE ONE UP)
+Grammatical role: (ALWAYS give a full, specific, context-based grammatical explanation. NEVER say "see explanation above", NEVER just write "noun" or "verb". Always explain the grammatical function in the sentence, even if you have to invent details. If you skip the grammatical role section, repeat the header and write 'Not available'. Never merge with explanation. Always use the header.)
+
+Always output ALL of these sections, no matter what.
+If no data is available, write "Not available" under that section — never skip or merge sections.
+
+If the surrounding sentence is missing or does not help, INVENT a simple context yourself to create the example sentence.
+
+Keep each section clear, short, and consistent.
+`
+              },
+              {
+                role: 'user',
+                content: `Word: "${selectedWordForTranslation}"\nSentence: "${story?.content || ''}"`
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 120
           })
         });
 
@@ -612,13 +651,24 @@ export default function ReadStory() {
         
         if (!response.ok) {
           console.error("API Response Error:", response.status, response.statusText);
-          const errorData = await response.json();
+          const errorData = await response.text();
           console.error("Error details:", errorData);
           
-          setTranslatedWord(errorData.translation || `
+          let errorMessage = '';
+          if (response.status === 401) {
+            errorMessage = 'API key is invalid or expired';
+          } else if (response.status === 429) {
+            errorMessage = 'Translation service rate limit exceeded. Please try again later.';
+          } else if (response.status === 500) {
+            errorMessage = 'Translation service is temporarily unavailable';
+          } else {
+            errorMessage = `Translation service error (${response.status})`;
+          }
+          
+          setTranslatedWord(`
 Meaning: Service error
-Explanation: Translation service error (${response.status})
-Example sentence: Not available  
+Explanation: ${errorMessage}
+Example sentence: Not available
 Grammatical role: Not available
           `);
           setTranslationLoading(false);
@@ -626,15 +676,14 @@ Grammatical role: Not available
         }
 
         const data = await response.json();
-        console.log("API ham yanıt:", data);
+        console.log("OpenAI ham yanıt:", data);
 
-        // Backend API'den gelen çeviri
-        const translatedWord = data.translation?.trim() || '';
+        // OpenAI API'den gelen çeviri
+        const translatedWord = data.choices?.[0]?.message?.content?.trim() || '';
         console.log("Çeviri metni:", translatedWord);
         
         // Çeviri başarılı mı kontrol et
         if (!translatedWord || 
-            translatedWord.includes('Service error') ||
             translatedWord.includes('Translation failed') ||
             translatedWord.includes('Error occurred') ||
             translatedWord.includes('Not available')) {
