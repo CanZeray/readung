@@ -129,7 +129,7 @@ export default function Vocabulary() {
       setFilteredWords(wordsData);
       
       // Check if free limit reached
-      if (membershipType === 'free' && wordsData.length >= wordLimit) {
+      if ((['free', 'basic'].includes(membershipType) || !membershipType) && wordsData.length >= wordLimit) {
         setFreeLimit(true);
       }
     } catch (error) {
