@@ -30,7 +30,7 @@ const Navbar = () => {
         </div>
         <div className="flex items-center gap-4">
           <Link href="/admin" className="hover:text-gray-300">
-            Admin Paneli
+            <span>Admin Paneli</span>
           </Link>
           <button onClick={handleLogout} className="hover:text-gray-300">
             Çıkış
@@ -243,10 +243,12 @@ export default function ManageUsers() {
               </svg>
             </button>
             <Link href="/admin" className="flex items-center text-blue-600 hover:text-blue-800">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
-              </svg>
-              Admin Paneline Dön
+              <span className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                </svg>
+                Admin Paneline Dön
+              </span>
             </Link>
           </div>
         </div>

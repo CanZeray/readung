@@ -139,7 +139,7 @@ export default function Home() {
                   <p className="text-yellow-600 text-sm">Independent language use</p>
                 </div>
               </Link>
-              {userData?.membershipType !== 'premium' && (
+              {(['free', 'basic'].includes(userData?.membershipType) || !userData?.membershipType) && (
                 <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-3 py-1 rounded-full shadow-lg animate-pulse">
                   ✨ Premium
                 </span>
@@ -159,7 +159,7 @@ export default function Home() {
                   <p className="text-yellow-700 text-sm">Complex topics and ideas</p>
                 </div>
               </Link>
-              {userData?.membershipType !== 'premium' && (
+              {(['free', 'basic'].includes(userData?.membershipType) || !userData?.membershipType) && (
                 <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-3 py-1 rounded-full shadow-lg animate-pulse">
                   ✨ Premium
                 </span>
@@ -179,7 +179,7 @@ export default function Home() {
                   <p className="text-red-600 text-sm">Fluent and precise language</p>
                 </div>
               </Link>
-              {userData?.membershipType !== 'premium' && (
+              {(['free', 'basic'].includes(userData?.membershipType) || !userData?.membershipType) && (
                 <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-3 py-1 rounded-full shadow-lg animate-pulse">
                   ✨ Premium
                 </span>
@@ -199,7 +199,7 @@ export default function Home() {
                   <p className="text-red-700 text-sm">Native-like language mastery</p>
                 </div>
               </Link>
-              {userData?.membershipType !== 'premium' && (
+              {(['free', 'basic'].includes(userData?.membershipType) || !userData?.membershipType) && (
                 <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-3 py-1 rounded-full shadow-lg animate-pulse">
                   ✨ Premium
                 </span>
@@ -298,7 +298,7 @@ export default function Home() {
                     : 'Access to A1 and A2 levels only'}
                 </p>
                 
-                {userData?.membershipType !== 'premium' && (
+                {(['free', 'basic'].includes(userData?.membershipType) || !userData?.membershipType) && (
                   <div className="pt-2">
                     <Link href="/upgrade/premium" className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm">
                       <span className="flex items-center">

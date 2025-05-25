@@ -406,7 +406,7 @@ export default function Profile() {
                     {cancellingSubscription ? 'Processing...' : 'Cancel Subscription'}
                   </button>
                 )}
-                {membershipType !== 'premium' && (
+                {(['free', 'basic'].includes(membershipType) || !membershipType) && (
                   <button 
                     onClick={handleUpgradeToPremium}
                     className="mt-4 w-full py-3 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-all flex items-center justify-center gap-2 text-base font-medium"
@@ -418,7 +418,7 @@ export default function Profile() {
                   </button>
                 )}
                 {/* Test amaçlı manuel güncelleme butonu - sadece development'da */}
-                {process.env.NODE_ENV === 'development' && membershipType !== 'premium' && (
+                {process.env.NODE_ENV === 'development' && (['free', 'basic'].includes(membershipType) || !membershipType) && (
                   <button 
                     onClick={handleManualUpgrade}
                     className="mt-2 w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-all text-sm font-medium"

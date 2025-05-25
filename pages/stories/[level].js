@@ -35,7 +35,7 @@ export default function StoryList() {
         
         // Ücretsiz kullanıcı kısıtlamalarını kontrol et
         if (
-          userData.membershipType !== 'premium' &&
+          (['free', 'basic'].includes(userData.membershipType) || !userData.membershipType) &&
           ['b1', 'b2', 'c1', 'c2'].includes(level.toLowerCase())
         ) {
           alert('This level is only available for premium members');
@@ -156,7 +156,7 @@ export default function StoryList() {
             <p className="text-yellow-600 text-xs">Intermediate</p>
           </div>
         </Link>
-        {membershipType !== 'premium' && (
+        {(['free', 'basic'].includes(membershipType) || !membershipType) && (
           <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
             ✨ PRO
           </span>
@@ -177,7 +177,7 @@ export default function StoryList() {
             <p className="text-yellow-700 text-xs">Upper Inter.</p>
           </div>
         </Link>
-        {membershipType !== 'premium' && (
+        {(['free', 'basic'].includes(membershipType) || !membershipType) && (
           <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
             ✨ PRO
           </span>
@@ -198,7 +198,7 @@ export default function StoryList() {
             <p className="text-red-600 text-xs">Advanced</p>
           </div>
         </Link>
-        {membershipType !== 'premium' && (
+        {(['free', 'basic'].includes(membershipType) || !membershipType) && (
           <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
             ✨ PRO
           </span>
@@ -219,7 +219,7 @@ export default function StoryList() {
             <p className="text-red-700 text-xs">Proficiency</p>
           </div>
         </Link>
-        {membershipType !== 'premium' && (
+        {(['free', 'basic'].includes(membershipType) || !membershipType) && (
           <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
             ✨ PRO
           </span>
