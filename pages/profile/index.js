@@ -140,6 +140,28 @@ export default function Profile() {
         return;
       }
 
+      // Önce test endpoint'ini çağır
+      console.log('Testing payment endpoint...');
+      const testResponse = await fetch(`${window.location.origin}/api/test-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          plan: 'monthly',
+          userId: currentUser.uid,
+          userEmail: currentUser.email
+        })
+      });
+
+      const testData = await testResponse.json();
+      console.log('Test endpoint response:', testData);
+
+      if (!testData.data?.hasStripeKey) {
+        alert('Ödeme servisi yapılandırılmamış. Stripe key eksik.');
+        return;
+      }
+
       // Dynamic API URL - current window location kullan
       const apiUrl = `${window.location.origin}/api/create-checkout-session`;
 
