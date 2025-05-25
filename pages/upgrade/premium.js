@@ -90,13 +90,25 @@ export default function PremiumUpgrade() {
         })
       });
 
+      console.log('Payment response status:', response.status);
+      
+      // Response'u kontrol et
+      if (!response.ok) {
+        let errorMessage = 'Payment failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.log('Error data:', errorData);
+        } catch (jsonError) {
+          console.error('JSON parse error:', jsonError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json();
       console.log('Payment response:', data);
       
-      if (!response.ok) {
-        throw new Error(data.details || data.error || 'Payment failed');
-      }
-
       if (data.url) {
         window.location.assign(data.url);
         return;

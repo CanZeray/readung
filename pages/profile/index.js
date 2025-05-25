@@ -155,12 +155,21 @@ export default function Profile() {
         })
       });
 
-      const data = await response.json();
-      
+      // Response'u kontrol et
       if (!response.ok) {
-        throw new Error(data.error || 'Ödeme sayfası oluşturulamadı');
+        let errorMessage = 'Ödeme sayfası oluşturulamadı';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (jsonError) {
+          console.error('JSON parse error:', jsonError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
+      const data = await response.json();
+      
       if (data.url) {
         window.location.href = data.url;
       } else {
