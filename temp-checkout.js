@@ -35,11 +35,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // Stripe key formatını kontrol et (test veya live)
-    if (!stripeKey.startsWith('sk_test_') && !stripeKey.startsWith('sk_live_')) {
+    if (!stripeKey.startsWith('sk_test_')) {
       return res.status(500).json({ 
         error: 'Payment service configuration error',
-        message: 'Invalid Stripe API key format'
+        message: 'Please use Stripe TEST mode API keys'
       });
     }
 
@@ -48,10 +47,10 @@ export default async function handler(req, res) {
       typescript: true
     });
 
-    // Production price ID'leri
+    // Test modu price ID'leri
     const PRODUCTS = {
-      monthly: 'price_1RQq3dKSJSLdtZ64j0qDgK1v',
-      annual: 'price_1RQq3dKSJSLdtZ64afIe5eeF'
+      monthly: 'price_1RRYGgKSJSLdtZ64XK8Vyd0Z',
+      annual: 'price_1RRYJ8KSJSLdtZ64wGt3pDPq'
     };
 
     const { plan, userId, userEmail } = req.body;
