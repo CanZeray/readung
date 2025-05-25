@@ -86,7 +86,8 @@ export default function PremiumUpgrade() {
         body: JSON.stringify({
           plan,
           userId: currentUser.uid,
-          userEmail: currentUser.email
+          userEmail: currentUser.email,
+          returnUrl: window.location.href
         })
       });
 
