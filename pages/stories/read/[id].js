@@ -176,7 +176,7 @@ const SaveWordModal = ({ isOpen, onClose, onSave, membershipType, savedWordsToda
             <p className="font-semibold">Free account: {3 - savedWordsToday} words remaining today</p>
             {savedWordsToday >= 3 && (
               <p className="text-primary mt-1">
-                <Link href="/upgrade" className="hover:underline">Upgrade to Premium</Link> for unlimited word saving
+                <Link href="/upgrade/premium" className="hover:underline">Upgrade to Premium</Link> for unlimited word saving
               </p>
             )}
           </div>
