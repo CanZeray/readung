@@ -94,8 +94,8 @@ export default async function handler(req, res) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/profile?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: returnUrl || `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/profile`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.readung.com'}/upgrade/premium?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: returnUrl || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.readung.com'}/upgrade/premium?payment=cancelled`,
       custom_text: {
         submit: {
           message: 'By subscribing, you agree to our Terms of Service and authorize Readung to charge your account according to your selected plan.'
