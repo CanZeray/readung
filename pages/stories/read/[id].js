@@ -330,6 +330,13 @@ export default function ReadStory() {
           setSavedWordsToday(userDataResult.savedWordsToday || 0);
         } else {
           setSavedWordsToday(0);
+          // Günlük kelime sayısını da sıfırla
+          if (userDataResult.savedWordsToday > 0) {
+            await updateDoc(doc(db, "users", currentUser.uid), {
+              savedWordsToday: 0,
+              lastWordSaveDate: today
+            });
+          }
         }
         
         if (lastTranslationDate === today) {

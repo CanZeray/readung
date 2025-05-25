@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/firebase';
-import { doc, getDoc, collection, getDocs, query, where, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, deleteDoc, updateDoc } from 'firebase/firestore';
 import Navbar from '../../components/Navbar';
 
 // Silme onay modalı
@@ -156,8 +156,22 @@ export default function Vocabulary() {
           // Set word limit based on membership
           setWordLimit(userData.membershipType === 'premium' ? 1000 : 100);
           
-          // Set saved words today for daily limit
-          setSavedWordsToday(userData.savedWordsToday || 0);
+          // Günlük kelime sayısını kontrol et ve gerekirse sıfırla
+          const today = new Date().toDateString();
+          const lastSaveDate = userData.lastWordSaveDate || '';
+          
+          if (lastSaveDate === today) {
+            setSavedWordsToday(userData.savedWordsToday || 0);
+          } else {
+            setSavedWordsToday(0);
+            // Günlük kelime sayısını da sıfırla
+            if (userData.savedWordsToday > 0) {
+              await updateDoc(userDocRef, {
+                savedWordsToday: 0,
+                lastWordSaveDate: today
+              });
+            }
+          }
           
           // Fetch saved words
           await fetchSavedWords();
