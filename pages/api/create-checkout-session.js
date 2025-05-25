@@ -79,7 +79,11 @@ export default async function handler(req, res) {
     }
 
     // Checkout session oluştur
-    console.log('Creating checkout session...');
+    console.log('Creating checkout session with metadata:', {
+      userId: userId,
+      userEmail: userEmail,
+      plan: plan
+    });
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
