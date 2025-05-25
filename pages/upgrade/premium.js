@@ -155,6 +155,18 @@ export default function PremiumUpgrade() {
       
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Back to Home */}
+          <div className="mb-6">
+            <Link href="/home" className="inline-flex items-center text-gray-600 hover:text-gray-800 font-medium transition-colors">
+              <span className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Return to Home
+              </span>
+            </Link>
+          </div>
+
           {/* Hero Section */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full mb-6 shadow-lg">
@@ -324,17 +336,7 @@ export default function PremiumUpgrade() {
                       </div>
                     </div>
 
-                    {/* Back to Home */}
-                    <div className="text-center">
-                      <Link href="/home" className="inline-flex items-center text-gray-600 hover:text-gray-800 font-medium transition-colors">
-                        <span className="flex items-center">
-                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                          </svg>
-                          Return to Home
-                        </span>
-                      </Link>
-                    </div>
+
                   </div>
                 </div>
               )}

@@ -1208,66 +1208,40 @@ Grammatical role: Not available
         savedWordsToday={savedWordsToday}
       />
 
-      {/* Reklam İzleme Modalı */}
+      {/* Çeviri Limit Modalı */}
       {showAdModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-md mx-auto p-6 w-full shadow-lg" style={{ maxWidth: '400px', borderRadius: '16px' }}>
-            {!watchingAd && !adCompleted ? (
-              <>
-                <div className="flex items-center mb-4">
-                  <span className="mr-2">🔒</span>
-                  <h3 className="text-2xl font-bold text-gray-900">You've Reached Your Daily Limit</h3>
-                </div>
-                
-                <div className="w-full bg-gray-200 h-2 rounded-full mb-6">
-                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: '100%' }}></div>
-                </div>
-                
-                <p className="mb-6 text-gray-600" style={{ lineHeight: '1.5', fontSize: '16px' }}>
-                  You've reached your free daily translation limit (10 translations). Watch a short ad to unlock 10 more translations.
-                </p>
-                
-                <button
-                  onClick={handleWatchAd}
-                  className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg mb-3 font-medium"
-                >
-                  Watch Ad
-                </button>
-                
-                <button
-                  onClick={handleCloseAdModal}
-                  className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg mb-4 font-medium"
-                >
-                  Cancel
-                </button>
-                
-                <div className="text-center">
-                  <Link href="/upgrade/premium" className="text-blue-600 hover:underline text-sm flex items-center justify-center">
-                    <span className="flex items-center">
-                      <span>Go Premium for Unlimited Translations</span>
-                      <span className="ml-1">💎</span>
-                    </span>
-                  </Link>
-                </div>
-              </>
-            ) : watchingAd ? (
-              <div className="text-center py-4">
-                <svg className="animate-spin h-10 w-10 mx-auto text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <h3 className="text-lg font-medium mb-2">Loading Ad</h3>
-                <p className="text-gray-600">Please wait...</p>
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-lg font-medium mb-2">Congratulations!</h3>
-                <p className="text-gray-600">You've earned 10 more translations.</p>
-              </div>
-            )}
+            <div className="flex items-center mb-4">
+              <span className="mr-2">🔒</span>
+              <h3 className="text-2xl font-bold text-gray-900">You've Reached Your Daily Limit</h3>
+            </div>
+            
+            <div className="w-full bg-gray-200 h-2 rounded-full mb-6">
+              <div className="bg-blue-500 h-2 rounded-full" style={{ width: '100%' }}></div>
+            </div>
+            
+            <p className="mb-6 text-gray-600" style={{ lineHeight: '1.5', fontSize: '16px' }}>
+              You've reached your free daily translation limit (10 translations). Upgrade to Premium for unlimited translations and access to all features.
+            </p>
+            
+            <Link href="/upgrade/premium">
+              <button className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg mb-3 font-medium transition-all">
+                <span className="flex items-center justify-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                  Upgrade to Premium
+                </span>
+              </button>
+            </Link>
+            
+            <button
+              onClick={handleCloseAdModal}
+              className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium"
+            >
+              Continue Reading
+            </button>
           </div>
         </div>
       )}
