@@ -274,7 +274,7 @@ export default function Vocabulary() {
             </div>
           </div>
 
-          {membershipType === 'free' && (
+          {(['free', 'basic'].includes(membershipType) || !membershipType) && (
             <div className="relative group mb-6">
               <div className="bg-gradient-to-br from-amber-50 to-orange-100 hover:from-amber-100 hover:to-orange-200 rounded-xl p-6 transition-all duration-300 shadow-md hover:shadow-lg border border-amber-200 hover:border-amber-300">
                 <div className="flex items-center justify-between">

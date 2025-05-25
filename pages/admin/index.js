@@ -28,7 +28,7 @@ const Navbar = () => {
         </div>
         <div className="flex items-center gap-4">
           <Link href="/home" className="hover:text-gray-300">
-            Ana Sayfa
+            <span>Ana Sayfa</span>
           </Link>
           <button onClick={handleLogout} className="hover:text-gray-300">
             Çıkış
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
               Çeviri önbelleğini görüntüleyin, analiz edin ve yönetin. Yapılan çevirilerin istatistiklerini görün.
             </p>
             <Link href="/admin/translation-cache" className="inline-block w-full py-2 px-4 bg-blue-600 text-white rounded-md text-center hover:bg-blue-700 transition-colors">
-              Önbelleği Görüntüle
+              <span>Önbelleği Görüntüle</span>
             </Link>
           </div>
           
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
               Kullanıcıları görüntüleyin, düzenleyin ve yönetin. Üyelik seviyelerini değiştirin ve kullanıcı eylemlerini izleyin.
             </p>
             <Link href="/admin/manage-users" className="inline-block w-full py-2 px-4 bg-green-600 text-white rounded-md text-center hover:bg-green-700 transition-colors">
-              Kullanıcıları Yönet
+              <span>Kullanıcıları Yönet</span>
             </Link>
           </div>
           
@@ -151,7 +151,7 @@ export default function AdminDashboard() {
               Hikayeleri görüntüleyin, düzenleyin, ekleyin veya silin. Tüm dil seviyelerine içerik yönetimi yapın.
             </p>
             <Link href="/admin/manage-stories" className="inline-block w-full py-2 px-4 bg-purple-600 text-white rounded-md text-center hover:bg-purple-700 transition-colors">
-              Hikayeleri Yönet
+              <span>Hikayeleri Yönet</span>
             </Link>
           </div>
         </div>

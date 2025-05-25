@@ -182,7 +182,7 @@ export default function PremiumUpgrade() {
             </div>
           ) : (
             <>
-              {userData && userData.membershipType !== 'premium' && (
+              {userData && (['free', 'basic'].includes(userData.membershipType) || !userData.membershipType) && (
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6">
                     <h2 className="text-2xl font-bold mb-2">Premium Membership Benefits</h2>

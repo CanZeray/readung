@@ -171,7 +171,7 @@ const SaveWordModal = ({ isOpen, onClose, onSave, membershipType, savedWordsToda
       <div ref={modalRef} className="bg-white rounded-lg p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-4">Save New Word</h2>
         
-        {membershipType === 'free' && (
+        {(['free', 'basic'].includes(membershipType) || !membershipType) && (
           <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm">
             <p className="font-semibold">Free account: {3 - savedWordsToday} words remaining today</p>
             {savedWordsToday >= 3 && (
@@ -354,7 +354,8 @@ export default function ReadStory() {
         }
         
         // Ücretsiz kullanıcı B1 ve üzeri seviyelere erişemez
-        if (userDataResult.membershipType !== 'premium') {
+        const isFreeUser = ['free', 'basic'].includes(userDataResult.membershipType) || !userDataResult.membershipType;
+        if (isFreeUser) {
           // Örnek hikaye kontrolü
           if (!id.startsWith('sample-')) {
           // Hikayeyi kontrol et
@@ -388,7 +389,7 @@ export default function ReadStory() {
           });
           
           // Kullanıcının okuduğu hikaye sayısını güncelle
-          if (userDataResult.membershipType === 'free') {
+          if (isFreeUser) {
             const today = new Date().toDateString();
             
             // Eğer bugün ilk kez hikaye okuyorsa
@@ -471,7 +472,8 @@ export default function ReadStory() {
     if (!currentUser || !userData) return;
     
     // Ücretsiz kullanıcı günlük kelime limiti kontrolü
-    if (userData.membershipType === 'free' && savedWordsToday >= 3) {
+    const isFreeUser = ['free', 'basic'].includes(userData.membershipType) || !userData.membershipType;
+    if (isFreeUser && savedWordsToday >= 3) {
       setShowLimitModal(true);
       return;
     }
@@ -546,7 +548,8 @@ export default function ReadStory() {
     
     try {
       // Ücretsiz kullanıcılar için çeviri limiti kontrolü (önce kontrol et)
-      if (userData.membershipType === 'free' && translationsToday >= 10) {
+      const isFreeUser = ['free', 'basic'].includes(userData.membershipType) || !userData.membershipType;
+      if (isFreeUser && translationsToday >= 10) {
         setShowAdModal(true);
         setTranslationLoading(false);
         return;
@@ -574,7 +577,7 @@ export default function ReadStory() {
         setTranslatedWord(existingTranslation.translation);
         
         // Eğer kullanıcı bu çeviriyi 24 saat içinde görmemişse limit artır
-        if (!hasRecentTranslation && userData.membershipType === 'free') {
+        if (!hasRecentTranslation && isFreeUser) {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
           
@@ -714,7 +717,7 @@ Grammatical role: Not available
         });
         
         // Yeni çeviri için her zaman limit artır ve listeye ekle (ücretsiz kullanıcılar için)
-        if (userData.membershipType === 'free') {
+        if (isFreeUser) {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
           
@@ -1076,7 +1079,7 @@ Grammatical role: Not available
             {selectedWordForTranslation}
             
             {/* Ücretsiz kullanıcılar için çeviri limiti göstergesi */}
-            {userData && userData.membershipType === 'free' && (
+            {userData && (['free', 'basic'].includes(userData.membershipType) || !userData.membershipType) && (
               <div className="mt-1 text-xs text-gray-500 flex items-center">
                 <span>Translations: {translationsToday}/10</span>
                 {translationsToday >= 5 && (
