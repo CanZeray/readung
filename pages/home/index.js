@@ -13,6 +13,7 @@ export default function Home() {
   const [userData, setUserData] = useState(null);
   const [savedWords, setSavedWords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Fetch saved words
   const fetchSavedWords = async () => {
@@ -38,6 +39,20 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Check for payment success parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+      setShowSuccessMessage(true);
+      // Remove the parameter from URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
+      // Hide message after 10 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 10000);
+    }
+
     async function fetchUserData() {
       if (!currentUser) {
         router.push('/auth/login');
@@ -83,6 +98,35 @@ export default function Home() {
       </Head>
       
       <Navbar />
+      
+      {/* Payment Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl shadow-2xl border border-green-400">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">Payment Successful! 🎉</h3>
+                  <p className="text-green-100 text-sm">Welcome to Premium! You can now access all features and story levels.</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowSuccessMessage(false)}
+                className="text-white hover:text-green-200 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <main className="flex-grow container mx-auto py-6 px-4">
         <h1 className="text-3xl font-bold mb-6">Welcome, {userData?.name || 'admin'}!</h1>

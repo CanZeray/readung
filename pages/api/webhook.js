@@ -49,6 +49,13 @@ export default async function handler(req, res) {
         const session = event.data.object;
         const userId = session.metadata.userId;
         console.log('Checkout completed for user:', userId);
+        
+        if (userId) {
+          await updateUserSubscription(userId, 'active');
+          console.log('User updated to premium:', userId);
+        } else {
+          console.error('No userId found in session metadata');
+        }
         break;
 
       case 'customer.subscription.created':
