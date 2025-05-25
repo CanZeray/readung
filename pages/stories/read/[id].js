@@ -1243,8 +1243,10 @@ Grammatical role: Not available
                 
                 <div className="text-center">
                   <Link href="/upgrade/premium" className="text-blue-600 hover:underline text-sm flex items-center justify-center">
-                    <span>Go Premium for Unlimited Translations</span>
-                    <span className="ml-1">💎</span>
+                    <span className="flex items-center">
+                      <span>Go Premium for Unlimited Translations</span>
+                      <span className="ml-1">💎</span>
+                    </span>
                   </Link>
                 </div>
               </>
