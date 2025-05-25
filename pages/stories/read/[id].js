@@ -844,51 +844,50 @@ Grammatical role: Not available
     return { left, top };
   };
 
-  // Hikayeyi tamamlandı olarak işaretle
+  // Hikayeyi tamamlandı olarak işaretle veya tamamlanmamış yap (toggle)
   const handleCompleteStory = async () => {
     try {
       if (!currentUser || !story) return;
       
-      // Kullanıcının okuduğu hikayelerin listesine bu hikayeyi ekle
       const userRef = doc(db, "users", currentUser.uid);
-      
-      // Güncel kullanıcı verilerini al
       const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        
-        // Okunan hikayeler listesi
         const completedStories = userData.completedStories || [];
         
-        // Hikaye zaten tamamlandıysa işlem yapma
         if (completedStories.includes(id)) {
+          // Hikaye tamamlandıysa, tamamlanmamış yap
+          const updatedStories = completedStories.filter(storyId => storyId !== id);
+          await updateDoc(userRef, {
+            completedStories: updatedStories
+          });
+          setCompleted(false);
+          
+          // Bildirim göster
+          const notification = document.createElement('div');
+          notification.className = 'fixed bottom-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded z-50';
+          notification.innerHTML = 'Story marked as not completed.';
+          document.body.appendChild(notification);
+          setTimeout(() => { notification.remove(); }, 2000);
+        } else {
+          // Hikaye tamamlanmamışsa, tamamla
+          await updateDoc(userRef, {
+            completedStories: arrayUnion(id)
+          });
           setCompleted(true);
-          return;
+          
+          // Başarılı mesaj göster
+          const notification = document.createElement('div');
+          notification.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+          notification.innerHTML = 'Congratulations! You have completed the story.';
+          document.body.appendChild(notification);
+          setTimeout(() => { notification.remove(); }, 2000);
         }
-        
-        // Hikayeyi tamamlandı olarak işaretle
-        await updateDoc(userRef, {
-          completedStories: arrayUnion(id),
-          storiesRead: (userData.storiesRead || 0) + 1
-        });
-        
-        setCompleted(true);
-        
-        // Başarılı mesaj göster
-        const notification = document.createElement('div');
-        notification.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
-        notification.innerHTML = 'Congratulations! You have completed the story.';
-        document.body.appendChild(notification);
-        
-        // 3 saniye sonra bildirim mesajını kaldır
-        setTimeout(() => {
-          notification.remove();
-        }, 3000);
       }
     } catch (error) {
-      console.error("Error completing story:", error);
-      alert('Hikaye tamamlanırken bir hata oluştu.');
+      console.error("Error toggling story completion:", error);
+      alert('Bir hata oluştu.');
     }
   };
 
@@ -1020,9 +1019,8 @@ Grammatical role: Not available
             
             <button 
               onClick={handleCompleteStory}
-              disabled={completed}
-              className={`px-5 py-2 rounded-lg shadow-md flex items-center justify-center font-medium transition-all ${
-                completed ? 'bg-green-100 text-green-600 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600 text-white'
+              className={`px-5 py-2 rounded-lg shadow-md flex items-center justify-center font-medium transition-all cursor-pointer ${
+                completed ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-green-500 hover:bg-green-600 text-white'
               }`}
             >
               {completed ? (
