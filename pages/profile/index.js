@@ -140,8 +140,6 @@ export default function Profile() {
         return;
       }
 
-
-
       // Dynamic API URL - current window location kullan
       const apiUrl = `${window.location.origin}/api/create-checkout-session`;
 
@@ -153,7 +151,8 @@ export default function Profile() {
         body: JSON.stringify({
           plan: 'monthly',
           userId: currentUser.uid,
-          userEmail: currentUser.email
+          userEmail: currentUser.email,
+          returnUrl: window.location.href
         })
       });
 
@@ -209,8 +208,6 @@ export default function Profile() {
       alert('Manual upgrade failed: ' + error.message);
     }
   };
-
-
 
   if (isLoading) {
     return (

@@ -54,14 +54,15 @@ export default async function handler(req, res) {
       annual: 'price_1RQq3dKSJSLdtZ64afIe5eeF'
     };
 
-    const { plan, userId, userEmail } = req.body;
+    const { plan, userId, userEmail, returnUrl } = req.body;
     
     // Gelen verileri kontrol et
     console.log('Request validation:', {
       hasPlan: !!plan,
       hasUserId: !!userId,
       hasEmail: !!userEmail,
-      requestedPlan: plan
+      requestedPlan: plan,
+      hasReturnUrl: !!returnUrl
     });
     
     if (!plan || !userId || !userEmail) {
@@ -94,7 +95,7 @@ export default async function handler(req, res) {
         },
       ],
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/profile?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/profile`,
+      cancel_url: returnUrl || `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/profile`,
       custom_text: {
         submit: {
           message: 'By subscribing, you agree to our Terms of Service and authorize Readung to charge your account according to your selected plan.'
