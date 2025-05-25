@@ -16,17 +16,27 @@ export const config = {
 };
 
 async function updateUserSubscription(userId, status) {
-  const userRef = doc(db, 'users', userId);
-  const userDoc = await getDoc(userRef);
+  try {
+    console.log('Attempting to update user subscription:', { userId, status });
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
 
-  if (userDoc.exists()) {
-    await updateDoc(userRef, {
-      membershipType: status === 'active' ? 'premium' : 'basic',
-      subscription: status === 'active' ? {
-        status: 'active',
-        updatedAt: new Date().toISOString()
-      } : null
-    });
+    if (userDoc.exists()) {
+      console.log('User found in Firestore, updating membership...');
+      await updateDoc(userRef, {
+        membershipType: status === 'active' ? 'premium' : 'basic',
+        subscription: status === 'active' ? {
+          status: 'active',
+          updatedAt: new Date().toISOString()
+        } : null
+      });
+      console.log('✅ User subscription updated successfully:', userId, 'to', status === 'active' ? 'premium' : 'basic');
+    } else {
+      console.error('❌ User not found in Firestore:', userId);
+    }
+  } catch (err) {
+    console.error('❌ Error updating user subscription:', err.message, 'for userId:', userId);
+    console.error('Full error:', err);
   }
 }
 
