@@ -203,7 +203,7 @@ export default function Profile() {
     }
   };
 
-  // Test amaçlı manuel premium güncelleme
+  // Test amaçlı manuel güncelleme
   const handleManualUpgrade = async () => {
     try {
       const token = await currentUser.getIdToken();
@@ -227,6 +227,32 @@ export default function Profile() {
     } catch (error) {
       console.error('Manual upgrade error:', error);
       alert('Manual upgrade failed: ' + error.message);
+    }
+  };
+
+  // Test endpoint kontrolü
+  const handleTestEndpoint = async () => {
+    try {
+      console.log('Testing payment endpoint...');
+      const testResponse = await fetch(`${window.location.origin}/api/test-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          plan: 'monthly',
+          userId: currentUser?.uid || 'test',
+          userEmail: currentUser?.email || 'test@test.com'
+        })
+      });
+
+      console.log('Test response status:', testResponse.status);
+      const testData = await testResponse.json();
+      console.log('Test endpoint response:', testData);
+      alert(`Test sonucu: ${JSON.stringify(testData, null, 2)}`);
+    } catch (error) {
+      console.error('Test endpoint error:', error);
+      alert('Test endpoint hatası: ' + error.message);
     }
   };
 
@@ -447,6 +473,13 @@ export default function Profile() {
                     🧪 Test: Activate Premium (Local Development)
                   </button>
                 )}
+                {/* Test endpoint butonu */}
+                <button 
+                  onClick={handleTestEndpoint}
+                  className="mt-2 w-full py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-all text-sm font-medium"
+                >
+                  🔧 Test Payment Endpoint
+                </button>
               </div>
             </div>
             <p className={`text-center mt-3 font-medium ${membershipType === 'premium' ? 'text-yellow-500' : 'text-blue-500'}`}>
