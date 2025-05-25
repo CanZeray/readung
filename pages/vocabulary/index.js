@@ -289,7 +289,7 @@ export default function Vocabulary() {
                       <p className="text-sm text-amber-700">You can save 3 words per day. ({3 - savedWordsToday} remaining today)</p>
                     </div>
                   </div>
-                  <Link href="/upgrade" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-sm font-medium py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
+                  <Link href="/upgrade/premium" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-sm font-medium py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
                     Upgrade to Premium ✨
                   </Link>
                 </div>
