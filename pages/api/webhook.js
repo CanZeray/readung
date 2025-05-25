@@ -47,14 +47,23 @@ export default async function handler(req, res) {
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object;
-        const userId = session.metadata.userId;
-        console.log('Checkout completed for user:', userId);
+        const userId = session.metadata?.userId;
+        console.log('Checkout session details:', {
+          sessionId: session.id,
+          metadata: session.metadata,
+          userId: userId,
+          hasMetadata: !!session.metadata,
+          metadataKeys: session.metadata ? Object.keys(session.metadata) : []
+        });
         
         if (userId) {
           await updateUserSubscription(userId, 'active');
           console.log('User updated to premium:', userId);
         } else {
-          console.error('No userId found in session metadata');
+          console.error('No userId found in session metadata', {
+            metadata: session.metadata,
+            sessionId: session.id
+          });
         }
         break;
 
