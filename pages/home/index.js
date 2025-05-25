@@ -329,7 +329,11 @@ export default function Home() {
               </div>
               
               <div className="space-y-2">
-                <p className="text-lg font-semibold text-purple-800">Stories read: {userData?.completedStories?.length || 0}</p>
+                <p className="text-lg font-semibold text-purple-800">
+                  Stories read: {(Array.isArray(userData?.completedStories) 
+                    ? userData.completedStories.filter(x => typeof x === 'string' && x).length 
+                    : 0)}
+                </p>
                 <p className="text-sm text-purple-700">Your learning progress</p>
               </div>
             </div>

@@ -547,9 +547,20 @@ export default function ReadStory() {
     setTranslationLoading(true);
     
     try {
-      // Ücretsiz kullanıcılar için çeviri limiti kontrolü (önce kontrol et)
+      // Ücretsiz kullanıcılar için çeviri limiti kontrolü
       const isFreeUser = ['free', 'basic'].includes(userData.membershipType) || !userData.membershipType;
-      if (isFreeUser && translationsToday >= 10) {
+      
+      // Kullanıcının çeviri geçmişini kontrol et (24 saatlik süre kontrolü)
+      const userTranslationHistory = userData.translationHistory || {};
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      // Bu kelimeyi daha önce çevirmiş mi ve 24 saat geçmiş mi kontrol et
+      const lastTranslationTime = userTranslationHistory[selectedWordForTranslation];
+      const hasRecentTranslation = lastTranslationTime && new Date(lastTranslationTime) > twentyFourHoursAgo;
+      
+      // Eğer bu kelime için yeni bir çeviri sayacı gerekiyorsa ve limit dolmuşsa
+      if (isFreeUser && !hasRecentTranslation && translationsToday >= 10) {
         setShowAdModal(true);
         setTranslationLoading(false);
         return;
@@ -561,15 +572,6 @@ export default function ReadStory() {
       const translationsRef = collection(db, "translations");
       const q = query(translationsRef, where("original", "==", selectedWordForTranslation));
       const querySnapshot = await getDocs(q);
-      
-      // Kullanıcının çeviri geçmişini kontrol et (24 saatlik süre kontrolü)
-      const userTranslationHistory = userData.translationHistory || {};
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      
-      // Bu kelimeyi daha önce çevirmiş mi ve 24 saat geçmiş mi kontrol et
-      const lastTranslationTime = userTranslationHistory[selectedWordForTranslation];
-      const hasRecentTranslation = lastTranslationTime && new Date(lastTranslationTime) > twentyFourHoursAgo;
       
       // Çeviri veritabanında var mı kontrol et
       if (!querySnapshot.empty) {
