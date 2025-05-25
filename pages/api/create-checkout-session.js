@@ -1,32 +1,5 @@
 import Stripe from 'stripe';
 
-// Stripe anahtarını kontrol et
-const stripeKey = process.env.STRIPE_SECRET_KEY;
-console.log('Stripe Key Check:', {
-  exists: !!stripeKey,
-  isTestMode: stripeKey?.startsWith('sk_test_'),
-  keyStart: stripeKey?.substring(0, 10) + '...'
-});
-
-if (!stripeKey) {
-  throw new Error('STRIPE_SECRET_KEY is not defined');
-}
-
-if (!stripeKey.startsWith('sk_test_')) {
-  throw new Error('Please use Stripe TEST mode API keys');
-}
-
-const stripe = new Stripe(stripeKey, {
-  apiVersion: '2023-10-16',
-  typescript: true
-});
-
-// Test modu price ID'leri
-const PRODUCTS = {
-  monthly: 'price_1RRYGgKSJSLdtZ64XK8Vyd0Z',
-  annual: 'price_1RRYJ8KSJSLdtZ64wGt3pDPq'
-};
-
 export default async function handler(req, res) {
   // CORS headers ekle
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -47,6 +20,39 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Stripe anahtarını kontrol et
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    console.log('Stripe Key Check:', {
+      exists: !!stripeKey,
+      isTestMode: stripeKey?.startsWith('sk_test_'),
+      keyStart: stripeKey?.substring(0, 10) + '...'
+    });
+
+    if (!stripeKey) {
+      return res.status(500).json({ 
+        error: 'Payment service not configured',
+        message: 'STRIPE_SECRET_KEY is not defined'
+      });
+    }
+
+    if (!stripeKey.startsWith('sk_test_')) {
+      return res.status(500).json({ 
+        error: 'Payment service configuration error',
+        message: 'Please use Stripe TEST mode API keys'
+      });
+    }
+
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2023-10-16',
+      typescript: true
+    });
+
+    // Test modu price ID'leri
+    const PRODUCTS = {
+      monthly: 'price_1RRYGgKSJSLdtZ64XK8Vyd0Z',
+      annual: 'price_1RRYJ8KSJSLdtZ64wGt3pDPq'
+    };
+
     const { plan, userId, userEmail } = req.body;
     
     // Gelen verileri kontrol et
