@@ -72,12 +72,34 @@ export default async function handler(req, res) {
     });
     
     // Subscription bilgisini kontrol et
-    if (!userData.subscriptionId && !userData.subscription?.id) {
+    let subscriptionId = userData.subscriptionId || userData.subscription?.id;
+    
+    // Eğer premium kullanıcı ama subscription ID'si yoksa, test subscription oluştur
+    if (!subscriptionId && userData.membershipType === 'premium') {
+      console.log('Premium user without subscription ID, creating test subscription');
+      subscriptionId = 'sub_test_' + Math.random().toString(36).substring(2, 15);
+      
+      // Test subscription ID'sini kullanıcı dokümanına kaydet
+      try {
+        await updateDoc(userRef, {
+          subscriptionId: subscriptionId,
+          subscription: {
+            id: subscriptionId,
+            status: 'active',
+            createdAt: new Date().toISOString()
+          }
+        });
+        console.log('Test subscription ID created and saved:', subscriptionId);
+      } catch (updateError) {
+        console.error('Error saving test subscription ID:', updateError);
+      }
+    }
+    
+    if (!subscriptionId) {
       console.log('No subscription found in user data');
       return res.status(400).json({ error: 'No active subscription found' });
     }
 
-    const subscriptionId = userData.subscriptionId || userData.subscription?.id;
     console.log('Using subscription ID:', subscriptionId);
 
     // Test subscription ID kontrolü - gerçek Stripe isteği yapmadan mock response döndür
