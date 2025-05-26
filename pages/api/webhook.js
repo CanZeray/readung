@@ -15,22 +15,30 @@ export const config = {
   },
 };
 
-async function updateUserSubscription(userId, status) {
+async function updateUserSubscription(userId, status, subscriptionId = null) {
   try {
-    console.log('Attempting to update user subscription:', { userId, status });
+    console.log('Attempting to update user subscription:', { userId, status, subscriptionId });
     const userRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userRef);
 
     if (userDoc.exists()) {
       console.log('User found in Firestore, updating membership...');
-      await updateDoc(userRef, {
+      const updateData = {
         membershipType: status === 'active' ? 'premium' : 'basic',
         subscription: status === 'active' ? {
+          id: subscriptionId,
           status: 'active',
           updatedAt: new Date().toISOString()
         } : null
-      });
-      console.log('✅ User subscription updated successfully:', userId, 'to', status === 'active' ? 'premium' : 'basic');
+      };
+      
+      // Eğer subscriptionId varsa, ayrı bir alan olarak da kaydet
+      if (subscriptionId) {
+        updateData.subscriptionId = subscriptionId;
+      }
+      
+      await updateDoc(userRef, updateData);
+      console.log('✅ User subscription updated successfully:', userId, 'to', status === 'active' ? 'premium' : 'basic', 'with subscriptionId:', subscriptionId);
     } else {
       console.error('❌ User not found in Firestore:', userId);
     }
@@ -58,17 +66,19 @@ export default async function handler(req, res) {
       case 'checkout.session.completed':
         const session = event.data.object;
         const userId = session.metadata?.userId;
+        const subscriptionId = session.subscription;
         console.log('Checkout session details:', {
           sessionId: session.id,
           metadata: session.metadata,
           userId: userId,
+          subscriptionId: subscriptionId,
           hasMetadata: !!session.metadata,
           metadataKeys: session.metadata ? Object.keys(session.metadata) : []
         });
         
         if (userId) {
-          await updateUserSubscription(userId, 'active');
-          console.log('User updated to premium:', userId);
+          await updateUserSubscription(userId, 'active', subscriptionId);
+          console.log('User updated to premium:', userId, 'with subscription:', subscriptionId);
         } else {
           console.error('No userId found in session metadata', {
             metadata: session.metadata,
