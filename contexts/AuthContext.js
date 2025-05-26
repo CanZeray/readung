@@ -4,7 +4,9 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
 import app, { getFirebaseAuth, getFirebaseDb } from '../lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -89,6 +91,53 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error("Login error:", error);
       setError(error.message || "An error occurred during login");
+      throw error;
+    }
+  }
+
+  // Google ile giriş yapma fonksiyonu
+  async function signInWithGoogle() {
+    try {
+      const auth = getFirebaseAuth();
+      if (!auth) {
+        const errorMsg = 'Firebase authentication is not available';
+        setError(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      const db = getFirebaseDb();
+      if (!db) {
+        const errorMsg = 'Firebase database is not available';
+        setError(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      // Kullanıcının Firestore'da kaydı var mı kontrol et
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) {
+        // Yeni kullanıcı ise Firestore'da kayıt oluştur
+        await setDoc(userRef, {
+          email: user.email,
+          name: user.displayName || 'Google User',
+          membershipType: 'free',
+          createdAt: new Date().toISOString(),
+          storiesRead: 0,
+          savedWords: [],
+          savedWordsToday: 0,
+          lastReadDate: new Date().toDateString()
+        });
+      }
+      
+      return user;
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      setError(error.message || "An error occurred during Google sign in");
       throw error;
     }
   }
@@ -186,6 +235,7 @@ export function AuthProvider({ children }) {
     currentUser,
     signup,
     login,
+    signInWithGoogle,
     logout,
     getUserData,
     error
