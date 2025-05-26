@@ -20,6 +20,9 @@ export default function Profile() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [testModeData, setTestModeData] = useState(null);
+  const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
+  const [cancelDate, setCancelDate] = useState(null);
+  const [daysRemaining, setDaysRemaining] = useState(0);
 
   const fetchUserData = async () => {
     try {
@@ -39,6 +42,19 @@ export default function Profile() {
           membershipType: userData.membershipType || 'basic'
         });
         setMembershipType(userData.membershipType || 'basic');
+
+        // İptal durumunu kontrol et
+        if (userData.cancelledAt) {
+          setSubscriptionCancelled(true);
+          const cancelledDate = new Date(userData.cancelledAt);
+          const endDate = new Date(cancelledDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 gün sonra
+          setCancelDate(endDate);
+          
+          const today = new Date();
+          const timeDiff = endDate.getTime() - today.getTime();
+          const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+          setDaysRemaining(Math.max(0, daysDiff));
+        }
 
         if (userData.membershipType === 'premium') {
           setIsLoadingSubscription(true);
@@ -397,7 +413,7 @@ export default function Profile() {
                     </p>
                   )}
                 </div>
-                {membershipType === 'premium' && (
+                {membershipType === 'premium' && !subscriptionCancelled && (
                   <button
                     onClick={handleCancelSubscription}
                     disabled={cancellingSubscription}
@@ -405,6 +421,49 @@ export default function Profile() {
                   >
                     {cancellingSubscription ? 'Processing...' : 'Cancel Subscription'}
                   </button>
+                )}
+                
+                {membershipType === 'premium' && subscriptionCancelled && (
+                  <div className="mt-4 space-y-3">
+                    {/* İptal durumu bilgisi */}
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                      <div className="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-orange-800">Subscription Cancelled</p>
+                          <p className="text-sm text-orange-700 mt-1">
+                            You have <span className="font-semibold">{daysRemaining} days</span> of premium access remaining
+                          </p>
+                          {cancelDate && (
+                            <p className="text-xs text-orange-600 mt-1">
+                              Premium expires on {cancelDate.toLocaleDateString('tr-TR')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Tekrar premium ol butonu */}
+                    <button 
+                      onClick={handleUpgradeToPremium}
+                      className="w-full py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-md hover:from-yellow-600 hover:to-yellow-700 transition-all flex items-center justify-center gap-2 text-base font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                      Reactivate Premium
+                    </button>
+                    
+                    {/* Teşvik mesajı */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-800 text-center">
+                        <span className="font-medium">💡 Don't lose your progress!</span><br/>
+                        Reactivate now to continue unlimited learning and keep all your saved words.
+                      </p>
+                    </div>
+                  </div>
                 )}
                 {(['free', 'basic'].includes(membershipType) || !membershipType) && (
                   <button 
