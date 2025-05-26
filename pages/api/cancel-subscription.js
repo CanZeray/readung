@@ -162,6 +162,16 @@ export default async function handler(req, res) {
       current_period_end: subscription.current_period_end
     });
 
+    // Firestore'da cancelledAt alanını güncelle
+    try {
+      await updateDoc(userRef, {
+        cancelledAt: new Date().toISOString()
+      });
+      console.log('User cancelledAt field updated successfully');
+    } catch (updateError) {
+      console.error('Error updating cancelledAt field:', updateError);
+    }
+
     res.json({
       message: 'Subscription will be canceled at the end of the billing period',
       cancelDate: new Date(subscription.current_period_end * 1000).toISOString(),
