@@ -444,9 +444,14 @@ export default function ReadStory() {
     clickTimer = setTimeout(() => {
       setSelectedWordForTranslation(word);
       const rect = e.target.getBoundingClientRect();
+      
+      // Viewport'a göre pozisyon hesapla (scroll offset dahil)
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      
       setTranslationPosition({
-        x: rect.left + window.scrollX,
-        y: rect.bottom + window.scrollY
+        x: rect.left + scrollLeft,
+        y: rect.bottom + scrollTop
       });
       setShowTranslateButton(true);
     }, 200); // 200ms gecikme ile tek tık
@@ -831,16 +836,39 @@ Grammatical role: Not available
     const buttonHeight = 40;
     const buttonWidth = 100;
     let left = translationPosition.x;
-    let top = translationPosition.y + 10;
+    let top = translationPosition.y + 5; // Kelimeye daha yakın
 
     // Ekrandan taşmayı engelle
     if (typeof window !== 'undefined') {
-      if (left + buttonWidth > window.innerWidth) {
-        left = window.innerWidth - buttonWidth - 16;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Viewport sınırlarını hesapla
+      const rightBoundary = scrollLeft + viewportWidth;
+      const bottomBoundary = scrollTop + viewportHeight;
+      const leftBoundary = scrollLeft;
+      const topBoundary = scrollTop;
+      
+      // Sağ taraftan taşmayı engelle
+      if (left + buttonWidth > rightBoundary) {
+        left = rightBoundary - buttonWidth - 10;
       }
-      if (top + buttonHeight > window.innerHeight) {
-        top = translationPosition.y - buttonHeight - 10;
-        if (top < 0) top = 10;
+      
+      // Sol taraftan taşmayı engelle
+      if (left < leftBoundary) {
+        left = leftBoundary + 10;
+      }
+      
+      // Alt taraftan taşmayı engelle - buton kelimeden yukarı çıksın
+      if (top + buttonHeight > bottomBoundary) {
+        top = translationPosition.y - buttonHeight - 5;
+      }
+      
+      // Üst taraftan da taşarsa, viewport içinde güvenli bir yere koy
+      if (top < topBoundary) {
+        top = topBoundary + 10;
       }
     }
     return { left, top };
@@ -1043,8 +1071,15 @@ Grammatical role: Not available
       {/* Çeviri butonu */}
       {showTranslateButton && (
         <div 
-          className="translation-button fixed bg-blue-600 text-white px-3 py-1 rounded-md shadow-md cursor-pointer z-50 hover:bg-blue-700"
-          style={getTranslationButtonPosition()}
+          className="translation-button absolute bg-blue-600 text-white px-3 py-1 rounded-md shadow-lg cursor-pointer z-50 hover:bg-blue-700 transition-all duration-200"
+          style={{
+            left: `${getTranslationButtonPosition().left}px`,
+            top: `${getTranslationButtonPosition().top}px`,
+            fontSize: '14px',
+            fontWeight: '500',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'auto'
+          }}
           onClick={handleTranslate}
         >
           Translate
