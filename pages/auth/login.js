@@ -10,7 +10,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const { login, googleSignIn, currentUser } = useAuth();
+  const { login, signInWithGoogle, currentUser } = useAuth();
 
   useEffect(() => {
     if (currentUser) {
@@ -49,7 +49,7 @@ export default function Login() {
     try {
       setError('');
       setIsLoading(true);
-      await googleSignIn();
+      await signInWithGoogle();
       router.push('/home');
     } catch (err) {
       console.error('Google sign-in error:', err);
