@@ -24,6 +24,13 @@ export default function Profile() {
   const [cancelDate, setCancelDate] = useState(null);
   const [daysRemaining, setDaysRemaining] = useState(0);
 
+  // Edit profile handler
+  const handleEditProfile = () => {
+    // For now, we'll navigate to a simple edit page or show a modal
+    // You can expand this to show a modal or navigate to a dedicated edit page
+    router.push('/profile/edit');
+  };
+
   const fetchUserData = async () => {
     try {
       if (!currentUser) {
@@ -299,7 +306,10 @@ export default function Profile() {
                   <p className="text-sm text-gray-600 leading-tight mt-1">{user?.email}</p>
                 </div>
               </div>
-              <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+              <button 
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                onClick={handleEditProfile}
+              >
                 Edit Profile
               </button>
             </div>
