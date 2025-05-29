@@ -447,7 +447,12 @@ export default function Home() {
 
             {/* Rating Form */}
             <div className="bg-white rounded-xl p-6 shadow-md">
-              <h2 className="text-2xl font-bold mb-4 text-center">Rate Your Experience</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Rate Your Experience</h2>
+                <Link href="/ratings" className="text-primary-500 hover:text-primary-600 text-sm font-medium">
+                  View History →
+                </Link>
+              </div>
               <div className="space-y-4">
                 {[
                   { id: 'ease', label: 'Ease of Use' },
