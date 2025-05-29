@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/firebase';
-import { collection, getDocs, query, where, limit, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, doc, getDoc, addDoc } from 'firebase/firestore';
 import Navbar from '../../components/Navbar';
 
 export default function Home() {
@@ -14,6 +14,50 @@ export default function Home() {
   const [savedWords, setSavedWords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  
+  // Rating states
+  const [ratings, setRatings] = useState({
+    ease: 0,
+    accuracy: 0,
+    learning: 0,
+    design: 0
+  });
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+
+  const isRatingComplete = Object.values(ratings).every(rating => rating > 0);
+
+  const handleRating = (category, value) => {
+    setRatings(prev => ({
+      ...prev,
+      [category]: value
+    }));
+  };
+
+  const handleSubmitRating = async () => {
+    if (!isRatingComplete) return;
+    
+    try {
+      const ratingRef = collection(db, 'ratings');
+      await addDoc(ratingRef, {
+        ...ratings,
+        userId: currentUser?.uid,
+        timestamp: new Date().toISOString()
+      });
+      
+      setShowSuccessAnimation(true);
+      setTimeout(() => setShowSuccessAnimation(false), 2000);
+      
+      setRatings({
+        ease: 0,
+        accuracy: 0,
+        learning: 0,
+        design: 0
+      });
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      alert('An error occurred while submitting your rating.');
+    }
+  };
 
   // Fetch saved words
   const fetchSavedWords = async () => {
@@ -384,19 +428,74 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Contact Section */}
+        {/* Contact and Rating Section */}
         <section className="bg-gray-50 py-12 mt-12 rounded-lg">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
-            <p className="text-gray-600 mb-4">Have questions? We're here to help!</p>
-            <a href="mailto:readung@hotmail.com" className="inline-flex items-center text-blue-600 hover:text-blue-800">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              readung@hotmail.com
-            </a>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto px-6">
+            {/* Contact Us */}
+            <div className="bg-white rounded-xl p-6 shadow-md">
+              <h2 className="text-2xl font-bold mb-4 text-center">Contact Us</h2>
+              <p className="text-gray-600 mb-4 text-center">Have questions? We're here to help!</p>
+              <div className="text-center">
+                <a href="mailto:readung@hotmail.com" className="inline-flex items-center text-blue-600 hover:text-blue-800">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  readung@hotmail.com
+                </a>
+              </div>
+            </div>
+
+            {/* Rating Form */}
+            <div className="bg-white rounded-xl p-6 shadow-md">
+              <h2 className="text-2xl font-bold mb-4 text-center">Rate Your Experience</h2>
+              <div className="space-y-4">
+                {[
+                  { id: 'ease', label: 'Ease of Use' },
+                  { id: 'accuracy', label: 'Translation Accuracy & Comprehension Aid' },
+                  { id: 'learning', label: 'Learning Benefit' },
+                  { id: 'design', label: 'Website Design' }
+                ].map((item) => (
+                  <div key={item.id} className="flex items-center justify-between">
+                    <span className="text-gray-700 text-sm">{item.label}</span>
+                    <div className="flex space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => handleRating(item.id, star)}
+                          className={`text-xl ${
+                            ratings[item.id] >= star ? 'text-yellow-400' : 'text-gray-300'
+                          } hover:text-yellow-400 transition-colors`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={handleSubmitRating}
+                  disabled={!isRatingComplete}
+                  className={`w-full mt-4 py-2 px-4 rounded-lg ${
+                    isRatingComplete
+                      ? 'bg-primary-500 hover:bg-primary-600 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  } transition-colors`}
+                >
+                  Submit Rating
+                </button>
+              </div>
+            </div>
           </div>
         </section>
+
+        {/* Success Animation */}
+        {showSuccessAnimation && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="animate-bounce bg-green-500 text-white px-6 py-3 rounded-full shadow-lg">
+              Thank you for your feedback! ✨
+            </div>
+          </div>
+        )}
       </main>
 
       <footer className="border-t py-6 text-center">
