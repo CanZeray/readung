@@ -645,7 +645,7 @@ When given a German word and its surrounding sentence, return:
 Meaning: (the most accurate meaning in 1-2 words)
 Explanation: (a short explanation, maximum 2 sentences)
 Example sentence: (ALWAYS provide an ENGLISH sentence using the meaning of the word, even if you have to MAKE ONE UP)
-Grammatical role: (ALWAYS give a full, specific, context-based grammatical explanation. NEVER say "see explanation above", NEVER just write "noun" or "verb". Always explain the grammatical function in the sentence, even if you have to invent details. If you skip the grammatical role section, repeat the header and write 'Not available'. Never merge with explanation. Always use the header.)
+Grammatical role: (ALWAYS give a detailed, context-specific grammatical explanation like "Adjective, attributive role describing the noun [X]" or "Noun, functioning as the subject of the sentence". NEVER just write "noun" or "verb" alone. If you cannot provide details, at least specify like "Noun (subject)", "Verb (past tense)", "Adjective (attributive)" etc.)
 
 Always output ALL of these sections, no matter what.
 If no data is available, write "Not available" under that section — never skip or merge sections.
@@ -661,7 +661,7 @@ Keep each section clear, short, and consistent.
               }
             ],
             temperature: 0.3,
-            max_tokens: 120
+            max_tokens: 150
           })
         });
 
@@ -1181,12 +1181,10 @@ Grammatical role: Not available
                   || translatedWord.match(/Role:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|$)/i);
                 if (grammarMatch && grammarMatch[1]?.trim()) {
                   grammar = grammarMatch[1].trim();
-                  // Kısa veya tembel cevapları engelle
+                  // Sadece çok tembel cevapları reddet, basit ama faydalı olanları kabul et
                   if (
                     grammar.toLowerCase().includes('see explanation above') ||
-                    grammar.toLowerCase() === 'noun' ||
-                    grammar.toLowerCase() === 'verb' ||
-                    grammar.length < 15
+                    grammar.length < 8  // 15'ten 8'e indirdik
                   ) {
                     grammar = '';
                   }
