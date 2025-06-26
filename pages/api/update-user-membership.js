@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
     console.log('Updating user membership for:', userId);
 
-    // Kullanıcıyı premium yap
+    // Kullanıcıyı premium yap - Manual upgrade için cancelled durumunu temizle
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
       membershipType: 'premium',
@@ -38,6 +38,8 @@ export default async function handler(req, res) {
         updatedAt: new Date().toISOString(),
         plan: 'monthly'
       },
+      // Manual upgrade için cancelled durumunu temizle
+      cancelledAt: null,
       updatedAt: new Date().toISOString()
     });
 
