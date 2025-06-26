@@ -159,6 +159,42 @@ export function AuthProvider({ children }) {
     }
   }
   
+  // Premium erişim kontrolü
+  function isPremiumActive(userData) {
+    if (!userData) return false;
+    
+    // Basic/free users are not premium
+    if (userData.membershipType === 'basic' || userData.membershipType === 'free' || !userData.membershipType) {
+      return false;
+    }
+    
+    // Check if subscription is active
+    if (userData.membershipType === 'premium') {
+      // If subscription is cancelled, check if still within grace period
+      if (userData.cancelledAt) {
+        const cancelledDate = new Date(userData.cancelledAt);
+        const gracePeriodEnd = new Date(cancelledDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days grace
+        const now = new Date();
+        
+        if (now > gracePeriodEnd) {
+          console.log('🚫 Premium subscription expired after grace period');
+          return false;
+        }
+        console.log('⚠️ Premium subscription cancelled but still in grace period');
+      }
+      
+      // Check subscription status
+      if (userData.subscription?.status === 'canceled' || userData.subscription?.status === 'inactive') {
+        console.log('🚫 Premium subscription status is inactive');
+        return false;
+      }
+      
+      return true;
+    }
+    
+    return false;
+  }
+
   // Kullanıcı bilgisini güncelleme
   async function getUserData() {
     if (!currentUser) return null;
@@ -177,6 +213,16 @@ export function AuthProvider({ children }) {
       if (docSnap.exists()) {
         // Admin rolünü kontrol et
         const userData = docSnap.data();
+        
+        // Premium erişim kontrolü - Expired premium users'ı basic'e düşür
+        if (userData.membershipType === 'premium' && !isPremiumActive(userData)) {
+          console.log('🔄 Downgrading expired premium user to basic');
+          await setDoc(docRef, { 
+            membershipType: 'basic',
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+          userData.membershipType = 'basic';
+        }
         
         // Eğer userData içinde role alanı yoksa ve currentUser.email
         // admin@readung.app veya geliştirici emailiniz ile eşleşiyorsa
@@ -238,6 +284,7 @@ export function AuthProvider({ children }) {
     signInWithGoogle,
     logout,
     getUserData,
+    isPremiumActive,
     error
   };
 

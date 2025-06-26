@@ -23,18 +23,55 @@ async function updateUserSubscription(userId, status, subscriptionId = null) {
 
     if (userDoc.exists()) {
       console.log('User found in Firestore, updating membership...');
-      const updateData = {
-        membershipType: status === 'active' ? 'premium' : 'basic',
-        subscription: status === 'active' ? {
-          id: subscriptionId,
-          status: 'active',
-          updatedAt: new Date().toISOString()
-        } : null,
-        subscriptionId: status === 'active' ? subscriptionId : null
-      };
       
-      await updateDoc(userRef, updateData);
-      console.log('✅ User subscription updated successfully:', userId, 'to', status === 'active' ? 'premium' : 'basic', 'with subscriptionId:', subscriptionId);
+      if (status === 'canceled') {
+        // ❌ Subscription cancelled - Set cancelled date and keep premium until end of billing cycle
+        const updateData = {
+          membershipType: 'basic', // ⚠️ Immediately downgrade to basic
+          cancelledAt: new Date().toISOString(),
+          subscription: {
+            status: 'canceled',
+            cancelledAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          subscriptionId: null // Clear subscription ID
+        };
+        
+        await updateDoc(userRef, updateData);
+        console.log('✅ User subscription cancelled and downgraded to basic:', userId);
+        
+      } else if (status === 'active') {
+        // ✅ Subscription active - Full premium access
+        const updateData = {
+          membershipType: 'premium',
+          subscription: {
+            id: subscriptionId,
+            status: 'active',
+            updatedAt: new Date().toISOString()
+          },
+          subscriptionId: subscriptionId,
+          // Clear any previous cancellation data
+          cancelledAt: null
+        };
+        
+        await updateDoc(userRef, updateData);
+        console.log('✅ User subscription updated successfully:', userId, 'to premium with subscriptionId:', subscriptionId);
+        
+      } else {
+        // Other status - Set to basic
+        const updateData = {
+          membershipType: 'basic',
+          subscription: {
+            status: status,
+            updatedAt: new Date().toISOString()
+          },
+          subscriptionId: null
+        };
+        
+        await updateDoc(userRef, updateData);
+        console.log('✅ User subscription updated:', userId, 'to basic with status:', status);
+      }
+      
     } else {
       console.error('❌ User not found in Firestore:', userId);
     }
