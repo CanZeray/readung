@@ -77,6 +77,8 @@ export default function PremiumUpgrade() {
     }
     
     setPaymentStatus('processing');
+    setError(null); // Clear previous errors
+    
     try {
       console.log('Sending payment request:', { plan, userId: currentUser.uid, userEmail: currentUser.email });
       
@@ -96,10 +98,22 @@ export default function PremiumUpgrade() {
       // Response'u kontrol et
       if (!response.ok) {
         let errorMessage = 'Payment failed';
+        let errorDetails = '';
+        
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
+          errorDetails = errorData.details || '';
+          
           console.log('Error data:', errorData);
+          
+          // Duplicate subscription hatası için özel mesaj
+          if (errorData.error === 'Subscription already exists' || errorData.error === 'Active subscription exists') {
+            setError(`⚠️ ${errorMessage}\n\nIf you believe this is an error, please contact our support team.`);
+            setPaymentStatus('error');
+            return;
+          }
+          
         } catch (jsonError) {
           console.error('JSON parse error:', jsonError);
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
