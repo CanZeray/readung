@@ -156,48 +156,52 @@ export default async function handler(req, res) {
       console.log('⚠️ Firebase check failed, continuing with Stripe check...');
     }
 
-    // 🔍 STRIPE'DA DUPLICATE KONTROLÜ
-    console.log('🔍 Checking Stripe for existing customers with email:', userEmail);
-    try {
-      const existingCustomers = await stripe.customers.list({
-        email: userEmail,
-        limit: 5 // Birden fazla olabilir, hepsini kontrol et
-      });
+    // 🔍 STRIPE'DA DUPLICATE KONTROLÜ - Sadece live mode'da çalıştır
+    if (!stripeKey.startsWith('sk_test_')) {
+      console.log('🔍 Live mode: Checking Stripe for existing customers with email:', userEmail);
+      try {
+        const existingCustomers = await stripe.customers.list({
+          email: userEmail,
+          limit: 5 // Birden fazla olabilir, hepsini kontrol et
+        });
 
-      if (existingCustomers.data.length > 0) {
-        console.log(`🔍 Found ${existingCustomers.data.length} existing customer(s) in Stripe`);
-        
-        // Her customer için aktif subscription kontrol et
-        for (const customer of existingCustomers.data) {
-          const subscriptions = await stripe.subscriptions.list({
-            customer: customer.id,
-            status: 'active',
-            limit: 10
-          });
-
-          if (subscriptions.data.length > 0) {
-            console.log('❌ Found active subscription for customer:', {
-              customerId: customer.id,
-              email: customer.email,
-              activeSubscriptions: subscriptions.data.length,
-              subscriptionIds: subscriptions.data.map(s => s.id)
+        if (existingCustomers.data.length > 0) {
+          console.log(`🔍 Found ${existingCustomers.data.length} existing customer(s) in Stripe`);
+          
+          // Her customer için aktif subscription kontrol et
+          for (const customer of existingCustomers.data) {
+            const subscriptions = await stripe.subscriptions.list({
+              customer: customer.id,
+              status: 'active',
+              limit: 10
             });
 
-            return res.status(400).json({
-              error: 'Active subscription exists',
-              message: 'This email already has an active subscription in our payment system. Please contact support if you believe this is an error.',
-              details: 'Active Stripe subscription found'
-            });
+            if (subscriptions.data.length > 0) {
+              console.log('❌ Found active subscription for customer:', {
+                customerId: customer.id,
+                email: customer.email,
+                activeSubscriptions: subscriptions.data.length,
+                subscriptionIds: subscriptions.data.map(s => s.id)
+              });
+
+              return res.status(400).json({
+                error: 'Active subscription exists',
+                message: 'This email already has an active subscription in our payment system. Please use a different email or cancel your existing subscription first.',
+                details: 'Active Stripe subscription found'
+              });
+            }
           }
+          console.log('✅ No active subscriptions found for existing customers');
+        } else {
+          console.log('✅ No existing customers found in Stripe with this email');
         }
-        console.log('✅ No active subscriptions found for existing customers');
-      } else {
-        console.log('✅ No existing customers found in Stripe with this email');
+      } catch (stripeError) {
+        console.error('❌ Stripe customer check error:', stripeError);
+        // Stripe check başarısız olursa devam et ama log et
+        console.log('⚠️ Stripe check failed, proceeding with caution...');
       }
-    } catch (stripeError) {
-      console.error('❌ Stripe customer check error:', stripeError);
-      // Stripe check başarısız olursa devam et ama log et
-      console.log('⚠️ Stripe check failed, proceeding with caution...');
+    } else {
+      console.log('🧪 Test mode: Skipping Stripe duplicate check');
     }
 
     // Checkout session oluştur
