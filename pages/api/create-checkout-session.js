@@ -108,7 +108,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ url: successUrl });
     }
 
-    // 🔍 DUPLICATE EMAIL KONTROLÜ - Firebase'da aynı email ile aktif premium var mı
+    // 🔍 DUPLICATE EMAIL KONTROLÜ - Gerçek Stripe subscription'ları kontrol et
     console.log('🔍 Checking for existing premium subscriptions for email:', userEmail);
     try {
       const usersRef = collection(db, 'users');
@@ -122,20 +122,34 @@ export default async function handler(req, res) {
         const existingUser = existingUsers.docs[0];
         const userData = existingUser.data();
         
-        console.log('❌ Found existing premium user with same email:', {
-          userId: existingUser.id,
-          email: userData.email,
-          membershipType: userData.membershipType,
-          subscriptionId: userData.subscriptionId
-        });
-        
-        return res.status(400).json({ 
-          error: 'Subscription already exists',
-          message: 'This email already has an active premium subscription. Please use a different email or cancel your existing subscription first.',
-          details: 'Duplicate subscription prevented'
-        });
+        // Aynı kullanıcı ise (userId match) izin ver
+        if (existingUser.id === userId) {
+          console.log('✅ Same user trying to upgrade, allowing...');
+        } 
+        // Test subscription'lar için izin ver (manual upgrade'lar)
+        else if (userData.subscriptionId?.startsWith('sub_test_')) {
+          console.log('✅ Test subscription found, allowing new subscription...');
+        }
+        // Gerçek subscription ID'si var ve aktif ise engelle
+        else if (userData.subscriptionId && !userData.subscriptionId.startsWith('sub_test_') && userData.subscription?.status === 'active') {
+          console.log('❌ Found existing premium user with active subscription:', {
+            userId: existingUser.id,
+            email: userData.email,
+            membershipType: userData.membershipType,
+            subscriptionId: userData.subscriptionId
+          });
+          
+          return res.status(400).json({ 
+            error: 'Subscription already exists',
+            message: 'This email already has an active premium subscription. Please use a different email or cancel your existing subscription first.',
+            details: 'Duplicate subscription prevented'
+          });
+        } else {
+          console.log('✅ Premium user found but no active subscription, allowing...');
+        }
+      } else {
+        console.log('✅ No existing premium users found with this email');
       }
-      console.log('✅ No existing premium users found with this email');
     } catch (firebaseError) {
       console.error('❌ Firebase query error:', firebaseError);
       // Devam et ama uyarı ver
