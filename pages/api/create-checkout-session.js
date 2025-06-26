@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { db } from '../../lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 export default async function handler(req, res) {
   // CORS headers ekle
@@ -50,10 +50,15 @@ export default async function handler(req, res) {
       typescript: true
     });
 
-    // Production price ID'leri
-    const PRODUCTS = {
-      monthly: 'price_1RQq3dKSJSLdtZ64j0qDgK1v',
-      annual: 'price_1RQq3dKSJSLdtZ64afIe5eeF'
+    // Price ID'leri - Test vs Live mode
+    const PRODUCTS = stripeKey.startsWith('sk_test_') ? {
+      // Test mode price ID'leri - Bu ID'leri Stripe Dashboard'dan alın
+      monthly: process.env.STRIPE_TEST_PRICE_MONTHLY || 'price_test_monthly_fallback',
+      annual: process.env.STRIPE_TEST_PRICE_ANNUAL || 'price_test_annual_fallback'
+    } : {
+      // Live mode price ID'leri
+      monthly: 'price_1RQq3dKSJSLdtZ64j0qDgK1v', // Live mode monthly
+      annual: 'price_1RQq3dKSJSLdtZ64afIe5eeF'   // Live mode annual
     };
 
     const { plan, userId, userEmail, returnUrl } = req.body;
@@ -78,6 +83,29 @@ export default async function handler(req, res) {
     if (!priceId) {
       console.error('Invalid plan:', plan);
       return res.status(400).json({ error: 'Invalid plan selected' });
+    }
+
+    // Test mode'da price ID fallback varsa test upgrade'i simüle et
+    if (stripeKey.startsWith('sk_test_') && priceId.includes('fallback')) {
+      console.log('🧪 Test mode: No valid price ID found, simulating direct upgrade');
+      
+      // Test amaçlı direkt upgrade
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        membershipType: 'premium',
+        subscriptionId: 'sub_test_direct_' + Date.now(),
+        subscription: {
+          status: 'active',
+          updatedAt: new Date().toISOString(),
+          plan: plan
+        },
+        cancelledAt: null,
+        updatedAt: new Date().toISOString()
+      });
+
+      // Success URL'e redirect
+      const successUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/home?payment=success&test_mode=true`;
+      return res.status(200).json({ url: successUrl });
     }
 
     // 🔍 DUPLICATE EMAIL KONTROLÜ - Firebase'da aynı email ile aktif premium var mı

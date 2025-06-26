@@ -50,17 +50,24 @@ export default function Profile() {
         });
         setMembershipType(userData.membershipType || 'basic');
 
-        // İptal durumunu kontrol et
-        if (userData.cancelledAt) {
-          setSubscriptionCancelled(true);
-          const cancelledDate = new Date(userData.cancelledAt);
-          const endDate = new Date(cancelledDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 gün sonra
-          setCancelDate(endDate);
+        // İptal durumunu kontrol et - Manual upgrade edilmiş kullanıcılar için özel kontrol
+        if (userData.cancelledAt && userData.membershipType === 'premium') {
+          // Premium kullanıcıların subscription status'unu kontrol et
+          const hasActiveSubscription = userData.subscription?.status === 'active';
+          const hasSubscriptionId = userData.subscriptionId && !userData.subscriptionId.startsWith('sub_test_');
           
-          const today = new Date();
-          const timeDiff = endDate.getTime() - today.getTime();
-          const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-          setDaysRemaining(Math.max(0, daysDiff));
+          // Test mode manual upgrade veya active subscription varsa cancelled durumunu gösterme
+          if (!hasActiveSubscription && !userData.subscriptionId?.startsWith('sub_test_')) {
+            setSubscriptionCancelled(true);
+            const cancelledDate = new Date(userData.cancelledAt);
+            const endDate = new Date(cancelledDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 gün sonra
+            setCancelDate(endDate);
+            
+            const today = new Date();
+            const timeDiff = endDate.getTime() - today.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            setDaysRemaining(Math.max(0, daysDiff));
+          }
         }
 
         if (userData.membershipType === 'premium') {
