@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { buffer } from 'micro';
 import { db } from '../../lib/firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 // Use environment variables for Stripe keys
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -29,13 +29,9 @@ async function updateUserSubscription(userId, status, subscriptionId = null) {
           id: subscriptionId,
           status: 'active',
           updatedAt: new Date().toISOString()
-        } : null
+        } : null,
+        subscriptionId: status === 'active' ? subscriptionId : null
       };
-      
-      // Eğer subscriptionId varsa, ayrı bir alan olarak da kaydet
-      if (subscriptionId) {
-        updateData.subscriptionId = subscriptionId;
-      }
       
       await updateDoc(userRef, updateData);
       console.log('✅ User subscription updated successfully:', userId, 'to', status === 'active' ? 'premium' : 'basic', 'with subscriptionId:', subscriptionId);
@@ -45,6 +41,27 @@ async function updateUserSubscription(userId, status, subscriptionId = null) {
   } catch (err) {
     console.error('❌ Error updating user subscription:', err.message, 'for userId:', userId);
     console.error('Full error:', err);
+  }
+}
+
+async function findUserIdByCustomerId(customerId) {
+  try {
+    console.log('🔍 Searching for user with Stripe customer ID:', customerId);
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('stripeCustomerId', '==', customerId));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      const userId = querySnapshot.docs[0].id;
+      console.log('✅ Found user ID:', userId, 'for customer:', customerId);
+      return userId;
+    } else {
+      console.error('❌ No user found with stripeCustomerId:', customerId);
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error finding user by customer ID:', error);
+    return null;
   }
 }
 
@@ -90,14 +107,57 @@ export default async function handler(req, res) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
         const subscription = event.data.object;
-        console.log('Subscription status:', subscription.status);
-        await updateUserSubscription(subscription.metadata.userId, subscription.status);
+        console.log('Subscription status:', subscription.status, 'ID:', subscription.id);
+        
+        let userIdForUpdate = subscription.metadata?.userId;
+        if (!userIdForUpdate && subscription.customer) {
+          userIdForUpdate = await findUserIdByCustomerId(subscription.customer);
+        }
+        
+        if (userIdForUpdate) {
+          await updateUserSubscription(userIdForUpdate, subscription.status, subscription.id);
+        } else {
+          console.error('❌ Could not find userId for subscription:', subscription.id);
+        }
         break;
 
       case 'customer.subscription.deleted':
         const canceledSubscription = event.data.object;
-        console.log('Subscription canceled');
-        await updateUserSubscription(canceledSubscription.metadata.userId, 'canceled');
+        console.log('🚫 Subscription canceled:', canceledSubscription.id, 'Customer:', canceledSubscription.customer);
+        
+        // Önce metadata'dan userId'yi bulmaya çalış
+        let userIdForCancel = canceledSubscription.metadata?.userId;
+        
+        // Metadata'da yoksa customer ID ile ara
+        if (!userIdForCancel && canceledSubscription.customer) {
+          userIdForCancel = await findUserIdByCustomerId(canceledSubscription.customer);
+        }
+        
+        if (userIdForCancel) {
+          await updateUserSubscription(userIdForCancel, 'canceled');
+          console.log('✅ User subscription canceled successfully:', userIdForCancel);
+        } else {
+          console.error('❌ Could not find userId for canceled subscription:', canceledSubscription.id);
+          
+          // Son çare: tüm premium kullanıcıları kontrol et
+          try {
+            const usersRef = collection(db, 'users');
+            const premiumQuery = query(usersRef, where('membershipType', '==', 'premium'));
+            const premiumSnapshot = await getDocs(premiumQuery);
+            
+            for (const userDoc of premiumSnapshot.docs) {
+              const userData = userDoc.data();
+              if (userData.subscriptionId === canceledSubscription.id || 
+                  userData.subscription?.id === canceledSubscription.id) {
+                await updateUserSubscription(userDoc.id, 'canceled');
+                console.log('✅ Found and canceled subscription for user:', userDoc.id);
+                break;
+              }
+            }
+          } catch (searchError) {
+            console.error('❌ Error in fallback user search:', searchError);
+          }
+        }
         break;
 
       case 'payment_intent.succeeded':
