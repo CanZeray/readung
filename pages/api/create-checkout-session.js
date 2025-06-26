@@ -1,4 +1,6 @@
 import Stripe from 'stripe';
+import { db } from '../../lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default async function handler(req, res) {
   // CORS headers ekle
@@ -76,6 +78,84 @@ export default async function handler(req, res) {
     if (!priceId) {
       console.error('Invalid plan:', plan);
       return res.status(400).json({ error: 'Invalid plan selected' });
+    }
+
+    // 🔍 DUPLICATE EMAIL KONTROLÜ - Firebase'da aynı email ile aktif premium var mı
+    console.log('🔍 Checking for existing premium subscriptions for email:', userEmail);
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, 
+        where('email', '==', userEmail),
+        where('membershipType', '==', 'premium')
+      );
+      const existingUsers = await getDocs(q);
+      
+      if (!existingUsers.empty) {
+        const existingUser = existingUsers.docs[0];
+        const userData = existingUser.data();
+        
+        console.log('❌ Found existing premium user with same email:', {
+          userId: existingUser.id,
+          email: userData.email,
+          membershipType: userData.membershipType,
+          subscriptionId: userData.subscriptionId
+        });
+        
+        return res.status(400).json({ 
+          error: 'Subscription already exists',
+          message: 'This email already has an active premium subscription. Please use a different email or cancel your existing subscription first.',
+          details: 'Duplicate subscription prevented'
+        });
+      }
+      console.log('✅ No existing premium users found with this email');
+    } catch (firebaseError) {
+      console.error('❌ Firebase query error:', firebaseError);
+      // Devam et ama uyarı ver
+      console.log('⚠️ Firebase check failed, continuing with Stripe check...');
+    }
+
+    // 🔍 STRIPE'DA DUPLICATE KONTROLÜ
+    console.log('🔍 Checking Stripe for existing customers with email:', userEmail);
+    try {
+      const existingCustomers = await stripe.customers.list({
+        email: userEmail,
+        limit: 5 // Birden fazla olabilir, hepsini kontrol et
+      });
+
+      if (existingCustomers.data.length > 0) {
+        console.log(`🔍 Found ${existingCustomers.data.length} existing customer(s) in Stripe`);
+        
+        // Her customer için aktif subscription kontrol et
+        for (const customer of existingCustomers.data) {
+          const subscriptions = await stripe.subscriptions.list({
+            customer: customer.id,
+            status: 'active',
+            limit: 10
+          });
+
+          if (subscriptions.data.length > 0) {
+            console.log('❌ Found active subscription for customer:', {
+              customerId: customer.id,
+              email: customer.email,
+              activeSubscriptions: subscriptions.data.length,
+              subscriptionIds: subscriptions.data.map(s => s.id)
+            });
+
+            return res.status(400).json({
+              error: 'Active subscription exists',
+              message: 'This email already has an active subscription in our payment system. Please contact support if you believe this is an error.',
+              details: 'Active Stripe subscription found'
+            });
+          }
+        }
+        console.log('✅ No active subscriptions found for existing customers');
+      } else {
+        console.log('✅ No existing customers found in Stripe with this email');
+      }
+    } catch (stripeError) {
+      console.error('❌ Stripe customer check error:', stripeError);
+      // Stripe check başarısız olursa devam et ama log et
+      console.log('⚠️ Stripe check failed, proceeding with caution...');
     }
 
     // Checkout session oluştur
