@@ -169,31 +169,22 @@ export default function PremiumUpgrade() {
       
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {/* Back to Home */}
-          <div className="mb-6">
-            <Link href="/home" className="inline-flex items-center text-gray-600 hover:text-gray-800 font-medium transition-colors">
-              <span className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Return to Home
-              </span>
-            </Link>
-          </div>
-
           {/* Hero Section */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full mb-6 shadow-lg">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-              </svg>
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <Link href="/home">
+                <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 group text-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  <span className="font-medium">Return to Home</span>
+                </button>
+              </Link>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Upgrade to Premium
+              </h1>
+              <div className="w-[140px]"></div>
             </div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-              Upgrade to Premium
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Unlock unlimited German learning with advanced stories, unlimited translations, and ad-free experience
-            </p>
           </div>
           
           {error && (
@@ -258,7 +249,7 @@ export default function PremiumUpgrade() {
                           </svg>
                         </div>
                         <h3 className="text-xl font-bold text-blue-800 mb-2">All Story Levels</h3>
-                        <p className="text-blue-700">Access B1, B2, C1, and C2 advanced content</p>
+                        <p className="text-blue-700">Access A1, A2, B1, and B2 advanced content</p>
                       </div>
                       
                       <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">

@@ -17,29 +17,32 @@ export default function StoryList() {
   const { currentUser, getUserData } = useAuth();
 
   useEffect(() => {
-    // Kullanıcı ve level yoksa işlem yapma
-    if (!currentUser || !level) return;
+    // Level yoksa işlem yapma
+    if (!level) return;
 
     async function fetchUserAndStories() {
       try {
         setLoading(true);
         
-        // Kullanıcı verilerini getir
-        const userData = await getUserData();
-        if (!userData) {
-          router.push('/auth/login');
-          return;
+        // Kullanıcı varsa verilerini getir
+        let userData = null;
+        if (currentUser) {
+          userData = await getUserData();
+          if (userData) {
+            setMembershipType(userData.membershipType || 'free');
+          }
+        } else {
+          setMembershipType('free');
         }
         
-        setMembershipType(userData.membershipType);
+        // Ücretli hikayeler için kontrol (sadece giriş yapmamış veya free/basic kullanıcılar için)
+        const isPremiumLevel = ['b1', 'b2'].includes(level.toLowerCase());
+        const isFreeUser = !userData || ['free', 'basic'].includes(userData.membershipType) || !userData.membershipType;
         
-        // Ücretsiz kullanıcı kısıtlamalarını kontrol et
-        if (
-          (['free', 'basic'].includes(userData.membershipType) || !userData.membershipType) &&
-          ['b1', 'b2', 'c1', 'c2'].includes(level.toLowerCase())
-        ) {
-          alert('This level is only available for premium members');
-          router.push('/home');
+        if (isPremiumLevel && isFreeUser) {
+          // Ücretli hikayeler için giriş yapılması gerekiyor
+          alert('Bu seviye için üye girişi ve premium üyelik gereklidir. Üye olmak için lütfen giriş yapın.');
+          router.push('/auth/login');
           return;
         }
         
@@ -49,8 +52,6 @@ export default function StoryList() {
           a2: 'A2 - Elementary',
           b1: 'B1 - Intermediate',
           b2: 'B2 - Upper Intermediate',
-          c1: 'C1 - Advanced',
-          c2: 'C2 - Proficiency',
         };
         setLevelName(levelNames[level.toLowerCase()] || level.toUpperCase());
         
@@ -68,6 +69,13 @@ export default function StoryList() {
             id: doc.id,
             ...doc.data()
           });
+        });
+        
+        // Hikayeleri sırala (timestamp veya dateAdded varsa ona göre, yoksa id'ye göre)
+        storyData.sort((a, b) => {
+          const dateA = a.dateAdded?.toDate ? a.dateAdded.toDate() : (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0));
+          const dateB = b.dateAdded?.toDate ? b.dateAdded.toDate() : (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0));
+          return dateB - dateA; // En yeni önce
         });
         
         setStories(storyData);
@@ -93,23 +101,27 @@ export default function StoryList() {
     a2: 'bg-green-50 text-green-600 hover:bg-green-100',
     b1: 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100',
     b2: 'bg-orange-50 text-orange-600 hover:bg-orange-100',
-    c1: 'bg-red-50 text-red-600 hover:bg-red-100',
-    c2: 'bg-purple-50 text-purple-600 hover:bg-purple-100'
   };
 
   // Hikaye kartları için pastel arka plan renkleri
   const storyCardBgColors = {
-    a1: 'bg-blue-50',
-    a2: 'bg-green-50',
-    b1: 'bg-yellow-50',
-    b2: 'bg-orange-50',
-    c1: 'bg-red-50',
-    c2: 'bg-purple-50'
+    a1: 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-emerald-100',
+    a2: 'bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 border-teal-100',
+    b1: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-amber-100',
+    b2: 'bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 border-rose-100',
+  };
+
+  // Buton renkleri - seviyeye göre
+  const buttonColors = {
+    a1: 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700',
+    a2: 'bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700',
+    b1: 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700',
+    b2: 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700',
   };
 
   // Seviye butonları
   const LevelButtons = () => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {/* A1 Level */}
       <div className="relative group">
         <Link href="/stories/a1">
@@ -184,47 +196,6 @@ export default function StoryList() {
         )}
       </div>
 
-      {/* C1 Level */}
-      <div className="relative group">
-        <Link href={membershipType === 'premium' ? "/stories/c1" : "/upgrade/premium"}>
-          <div className={`block bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 hover:from-red-100 hover:to-red-200 transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 border border-red-200 hover:border-red-300 cursor-pointer
-            ${level?.toLowerCase() === 'c1' ? 'ring-2 ring-red-400 shadow-lg' : ''}`}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-lg font-bold text-red-800 group-hover:text-red-900">C1</h3>
-              <div className="w-6 h-6 bg-red-200 rounded-full flex items-center justify-center group-hover:bg-red-300 transition-colors">
-                <span className="text-red-800 font-bold text-xs">C1</span>
-              </div>
-            </div>
-            <p className="text-red-600 text-xs">Advanced</p>
-          </div>
-        </Link>
-        {(['free', 'basic'].includes(membershipType) || !membershipType) && (
-          <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
-            ✨ PRO
-          </span>
-        )}
-      </div>
-
-      {/* C2 Level */}
-      <div className="relative group">
-        <Link href={membershipType === 'premium' ? "/stories/c2" : "/upgrade/premium"}>
-          <div className={`block bg-gradient-to-br from-red-100 to-red-200 rounded-xl p-4 hover:from-red-200 hover:to-red-300 transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 border border-red-300 hover:border-red-400 cursor-pointer
-            ${level?.toLowerCase() === 'c2' ? 'ring-2 ring-red-400 shadow-lg' : ''}`}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-lg font-bold text-red-800 group-hover:text-red-900">C2</h3>
-              <div className="w-6 h-6 bg-red-300 rounded-full flex items-center justify-center group-hover:bg-red-400 transition-colors">
-                <span className="text-red-800 font-bold text-xs">C2</span>
-              </div>
-            </div>
-            <p className="text-red-700 text-xs">Proficiency</p>
-          </div>
-        </Link>
-        {(['free', 'basic'].includes(membershipType) || !membershipType) && (
-          <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
-            ✨ PRO
-          </span>
-        )}
-      </div>
     </div>
   );
 
@@ -239,12 +210,12 @@ export default function StoryList() {
       <main className="flex-grow container mx-auto px-4 py-8">
         <button
           onClick={() => router.push('/home')}
-          className="flex items-center gap-2 text-[#60a5fa] hover:text-[#3b82f6] transition-colors mb-4"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 mb-2 group text-sm"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back to Homepage
+          <span className="font-medium">Back to Homepage</span>
         </button>
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{levelName} Stories</h1>
@@ -263,42 +234,81 @@ export default function StoryList() {
           <p>No stories available for this level yet.</p>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stories.map((story) => (
-              <div 
-                key={story.id} 
-                className={`${storyCardBgColors[level?.toLowerCase()] || 'bg-blue-50'} rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-102 transform flex flex-col`}
-              >
-                <div className="p-6 flex flex-col h-full">
-                  <h2 className="text-xl font-bold mb-3 pb-3 border-b border-gray-200">{story.title}</h2>
-                  <p className="text-gray-600 mb-4">{story.description}</p>
-                  <div className="mt-auto">
-                    <div className="flex justify-between text-sm text-gray-500 mb-4">
-                      <span className="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            {stories.map((story, index) => {
+              // A1 seviyesinde ilk 3 hikayeden sonrakiler için premium kontrolü
+              // A2 seviyesinde ilk 3 hikayeden sonrakiler için premium kontrolü
+              const levelLower = level?.toLowerCase();
+              const isA1 = levelLower === 'a1';
+              const isA2 = levelLower === 'a2';
+              const isA1AfterFirst3 = isA1 && index >= 3;
+              const isA2AfterFirst3 = isA2 && index >= 3;
+              const requiresPremium = isA1AfterFirst3 || isA2AfterFirst3;
+              const isFreeUser = !currentUser || ['free', 'basic'].includes(membershipType) || !membershipType;
+              const isLocked = requiresPremium && isFreeUser;
+              
+              return (
+                <div 
+                  key={story.id} 
+                  className={`${storyCardBgColors[level?.toLowerCase()] || 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-emerald-100'} rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-102 transform flex flex-col border-2 relative ${isLocked ? 'opacity-75' : ''}`}
+                >
+                  {isLocked && (
+                    <div className="absolute inset-0 bg-gray-900 bg-opacity-50 rounded-2xl flex items-center justify-center z-10">
+                      <div className="text-center text-white p-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
-                        {story.wordCount} words
-                      </span>
-                      <span className="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {story.readTime} min read
-                      </span>
+                        <p className="font-bold mb-3 text-lg">Premium Required</p>
+                        <Link href="/upgrade/premium">
+                          <button className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white px-6 py-3 rounded-xl text-base font-bold shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-yellow-300 hover:border-yellow-400 ring-2 ring-yellow-200/50 hover:ring-yellow-300/70">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            </svg>
+                            <span>Upgrade to Premium</span>
+                            <span className="text-lg">✨</span>
+                          </button>
+                        </Link>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => handleReadStory(story.id)}
-                      className="w-full py-2 px-4 bg-gradient-to-r from-[#3B82F6] to-[#0EA5E9] text-white rounded-md hover:shadow-lg hover:translate-y-[-2px] transition-all duration-300 flex items-center justify-center gap-2"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                      Read Story
-                    </button>
+                  )}
+                  <div className="p-6 flex flex-col h-full">
+                    <h2 className="text-xl font-bold mb-3 pb-3 border-b border-gray-200">{story.title}</h2>
+                    <p className="text-gray-600 mb-4">{story.description}</p>
+                    <div className="mt-auto">
+                      <div className="flex justify-between text-sm text-gray-500 mb-4">
+                        <span className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                          </svg>
+                          {story.wordCount} words
+                        </span>
+                        <span className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {typeof story.readTime === 'string' && story.readTime.includes('min') ? story.readTime : `${story.readTime} min`} read
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (isLocked) {
+                            router.push('/upgrade/premium');
+                          } else {
+                            handleReadStory(story.id);
+                          }
+                        }}
+                        className={`w-full py-2 px-4 ${isLocked ? 'bg-gray-400 cursor-not-allowed' : buttonColors[level?.toLowerCase()] || 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700'} text-white rounded-md hover:shadow-lg hover:translate-y-[-2px] transition-all duration-300 flex items-center justify-center gap-2`}
+                        disabled={isLocked}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        {isLocked ? 'Premium Required' : 'Read Story'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

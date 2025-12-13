@@ -23,7 +23,18 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, word }) => {
         <div className="text-center mb-6">
           <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Word</h3>
           <p className="text-gray-600">
-            Are you sure you want to delete "<span className="font-semibold text-gray-800">{word}</span>"?
+            Are you sure you want to delete "<span className="font-semibold text-gray-800">
+              {(() => {
+                if (!word) return 'Unknown';
+                if (typeof word === 'string') return word;
+                if (typeof word === 'object' && word !== null) {
+                  if (word.word) return String(word.word);
+                  if (word.meaning) return String(word.meaning);
+                  return String(word);
+                }
+                return String(word);
+              })()}
+            </span>"?
           </p>
         </div>
 
@@ -75,8 +86,21 @@ const VocabularyCard = ({ word, onRemove, index }) => {
         
         {/* Kelime bilgileri */}
         <div className="pr-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-gray-900 transition-colors">{word.word}</h3>
-          <p className="text-gray-600 mb-3 font-medium">{word.translation}</p>
+          <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-gray-900 transition-colors">
+            {typeof word.word === 'string' ? word.word : (word.word?.word || 'Unknown')}
+          </h3>
+          <p className="text-gray-600 mb-3 font-medium">
+            {(() => {
+              if (!word.translation) return 'No translation';
+              if (typeof word.translation === 'string') return word.translation;
+              if (typeof word.translation === 'object') {
+                if (word.translation.meaning) return word.translation.meaning;
+                if (word.translation.translation) return word.translation.translation;
+                return 'Translation available';
+              }
+              return String(word.translation);
+            })()}
+          </p>
           
           {/* Ekleme tarihi */}
           <div className="flex items-center text-xs text-gray-500">
@@ -93,7 +117,15 @@ const VocabularyCard = ({ word, onRemove, index }) => {
         isOpen={showConfirmation}
         onClose={() => setShowConfirmation(false)}
         onConfirm={confirmDelete}
-        word={word.word}
+        word={(() => {
+          if (!word || !word.word) return 'Unknown';
+          if (typeof word.word === 'string') return word.word;
+          if (typeof word.word === 'object' && word.word !== null) {
+            if (word.word.word) return String(word.word.word);
+            return String(word.word);
+          }
+          return String(word.word);
+        })()}
       />
     </div>
   );
@@ -117,13 +149,43 @@ export default function Vocabulary() {
       // Alt koleksiyondan kelimeleri çek
       const savedWordsRef = collection(db, 'users', currentUser.uid, 'savedWords');
       const wordsSnapshot = await getDocs(savedWordsRef);
-      const wordsData = wordsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const wordsData = wordsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const processedWord = {
+          id: doc.id,
+          ...data
+        };
+        
+        // Timestamp objelerini string'e çevir
+        if (processedWord.dateAdded && typeof processedWord.dateAdded === 'object') {
+          if (processedWord.dateAdded.toDate) {
+            processedWord.dateAdded = processedWord.dateAdded.toDate().toISOString();
+          } else if (processedWord.dateAdded.seconds) {
+            processedWord.dateAdded = new Date(processedWord.dateAdded.seconds * 1000).toISOString();
+          }
+        }
+        
+        // word alanını string'e çevir
+        if (processedWord.word && typeof processedWord.word === 'object' && processedWord.word !== null) {
+          processedWord.word = processedWord.word.word || String(processedWord.word);
+        }
+        
+        // translation alanını string'e çevir
+        if (processedWord.translation && typeof processedWord.translation === 'object' && processedWord.translation !== null) {
+          processedWord.translation = processedWord.translation.meaning || 
+                                      processedWord.translation.translation || 
+                                      String(processedWord.translation);
+        }
+        
+        return processedWord;
+      });
       
       // Sort words by date added (newest first)
-      wordsData.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+      wordsData.sort((a, b) => {
+        const dateA = a.dateAdded ? new Date(a.dateAdded).getTime() : 0;
+        const dateB = b.dateAdded ? new Date(b.dateAdded).getTime() : 0;
+        return dateB - dateA;
+      });
       
       setSavedWords(wordsData);
       setFilteredWords(wordsData);
@@ -196,13 +258,8 @@ export default function Vocabulary() {
       );
     }
     
-    // Apply category filter
-    if (filter !== 'all') {
-      filtered = filtered.filter(word => word.level === filter);
-    }
-    
     setFilteredWords(filtered);
-  }, [searchTerm, filter, savedWords]);
+  }, [searchTerm, savedWords]);
 
   // Handle removing a word
   const handleRemoveWord = async (index) => {
@@ -254,12 +311,12 @@ export default function Vocabulary() {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Link href="/home">
-                  <div className="inline-flex items-center gap-2 text-white hover:text-blue-100 transition-colors mr-6 bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 cursor-pointer">
+                  <span className="inline-flex items-center gap-2 text-white hover:text-blue-100 transition-colors mr-6 bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                     <span>Back to Home</span>
-                  </div>
+                  </span>
                 </Link>
                 <div>
                   <h1 className="text-3xl font-bold">My Vocabulary</h1>
@@ -297,39 +354,23 @@ export default function Vocabulary() {
             </div>
           )}
 
-          {/* Search and Filter Controls */}
+          {/* Search Controls */}
           <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 shadow-md border border-gray-200 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="col-span-1 md:col-span-2">
-                <label htmlFor="search" className="sr-only">Search</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    id="search"
-                    className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
-                    placeholder="Search words in German or English"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
+            <label htmlFor="search" className="sr-only">Search</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
-              <div className="col-span-1">
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="w-full py-3 px-4 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="recent">Recent</option>
-                  <option value="a1">A1 Level</option>
-                  <option value="a2">A2 Level</option>
-                </select>
-              </div>
+              <input
+                type="text"
+                id="search"
+                className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                placeholder="Search words in German or English"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
           </div>
 

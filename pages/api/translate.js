@@ -6,27 +6,36 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Firebase admin kontrol et
-    if (!auth) {
-      console.error('Firebase admin not initialized');
-      return res.status(500).json({ error: 'Authentication service not available' });
-    }
-
-    // Firebase Auth token doğrulama
+    // Firebase Auth token doğrulama - opsiyonel, auth yoksa ya da token yoksa yine de devam et
+    let userId = null;
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'No authorization token provided' });
+    if (auth && authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split('Bearer ')[1];
+        const decodedToken = await auth.verifyIdToken(token);
+        userId = decodedToken.uid;
+      } catch (err) {
+        console.error('Auth verification failed, proceeding without userId:', err);
+      }
+    } else {
+      if (!auth) {
+        console.warn('Firebase admin not initialized, proceeding without userId');
+      } else {
+        console.warn('No auth token provided, proceeding without userId');
+      }
     }
 
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await auth.verifyIdToken(token);
-    const userId = decodedToken.uid;
-
-    const { word, context } = req.body;
+    const { word, context, targetLanguage = 'english' } = req.body;
     
     if (!word) {
       return res.status(400).json({ error: 'Word is required' });
     }
+    
+    // Target language'a göre çeviri dili belirle
+    const isTurkish = targetLanguage === 'turkish';
+    const targetLang = isTurkish ? 'Turkish' : 'English';
+    
+    console.log('Translation request - Word:', word, 'Target Language:', targetLanguage, 'isTurkish:', isTurkish);
 
     console.log('Translation API called for word:', word);
 
@@ -56,7 +65,28 @@ Grammatical role: Not available
         messages: [
           {
             role: 'system',
-            content: `
+            content: isTurkish ? `
+Sen profesyonel bir Almanca-Türkçe çevirmenisin. ÇEVİRİLERİNİ MUTLAKA TÜRKÇE YAP.
+
+Bir Almanca kelime ve çevresindeki cümle verildiğinde, şunu TÜRKÇE olarak döndür:
+
+Anlam: (1-2 kelimede en doğru TÜRKÇE anlam)
+Açıklama: (kısa bir TÜRKÇE açıklama, maksimum 2 cümle - TÜMÜ TÜRKÇE OLMALI)
+Örnek cümle: (KELİMENİN ANLAMINI KULLANARAK HER ZAMAN TÜRKÇE bir cümle ver, gerekirse UYDUR - CÜMLE TAMAMEN TÜRKÇE OLMALI)
+Gramer rolü: (HER ZAMAN tam, spesifik, bağlam temelli bir TÜRKÇE gramer açıklaması ver. ASLA "yukarıdaki açıklamaya bakın" deme, ASLA sadece "isim" veya "fiil" yazma. Cümledeki gramer fonksiyonunu her zaman TÜRKÇE olarak açıkla, detay icat etmen gerekse bile. Gramer rolü bölümünü atlarsan, başlığı tekrarla ve 'Mevcut değil' yaz. Açıklama ile birleştirme. Her zaman başlığı kullan.)
+
+ÖNEMLİ: 
+1. Tüm başlıkları İngilizce değil TÜRKÇE kullan: "Anlam:", "Açıklama:", "Örnek cümle:", "Gramer rolü:"
+2. TÜM içerik TÜRKÇE olmalı - hiçbir İngilizce kelime veya cümle kullanma
+3. Anlam, Açıklama, Örnek cümle ve Gramer rolü bölümlerinin TAMAMI TÜRKÇE olmalı
+
+Her zaman TÜM bu bölümleri TÜRKÇE olarak çıktıla, ne olursa olsun.
+Veri yoksa, o bölümün altına "Mevcut değil" yaz — bölümleri asla atlama veya birleştirme.
+
+Çevredeki cümle eksikse veya yardımcı olmuyorsa, örnek cümleyi oluşturmak için kendin basit bir bağlam UYDUR.
+
+Her bölümü açık, kısa ve tutarlı tut. UNUTMA: HER ŞEY TÜRKÇE OLMALI!
+` : `
 You are a professional German-to-English translator.
 
 When given a German word and its surrounding sentence, return:

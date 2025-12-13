@@ -76,7 +76,19 @@ Als die Sonne untergeht, wird es kühler. Die Menschen packen langsam ihre Sache
 // Navbar component
 const Navbar = () => {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { currentUser, logout, getUserData } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    async function fetchUser() {
+      if (currentUser) {
+        const data = await getUserData?.();
+        setUserData(data);
+      }
+    }
+    fetchUser();
+  }, [currentUser, getUserData]);
 
   const handleLogout = async () => {
     try {
@@ -88,25 +100,125 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-dark text-white px-4 py-3">
+    <nav className="bg-gray-900 text-white px-4 py-3 shadow-md sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center">
-        <Link href="/home" className="text-xl font-bold flex items-center">
+        <Link href="/home" className="text-3xl font-bold flex items-center group hover:scale-105 transition-transform">
           <span className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-blue-500 group-hover:text-blue-300 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <span className="text-blue-500">Readung</span>
+            <span className="text-blue-500 font-bold group-hover:text-blue-300 transition-colors duration-300">Readung</span>
           </span>
         </Link>
-        <div className="flex items-center gap-4">
-          <Link href="/profile" className="hover:text-gray-300">
-            <span>Profile</span>
-          </Link>
-          <button onClick={handleLogout} className="hover:text-gray-300">
-            Logout
-          </button>
+        
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-5">
+          {currentUser ? (
+            <>
+              <Link href="/profile" className={`font-medium cursor-pointer ${router.pathname === '/profile' ? 'text-blue-400' : ''}`}>
+                <div className="flex items-center gap-1 hover:text-blue-300 hover:bg-gray-800 transition-all duration-300 px-3 py-2 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>Profile</span>
+                </div>
+              </Link>
+              {userData?.role === 'admin' && (
+                <Link href="/admin" className="hover:text-yellow-300 transition-colors font-medium cursor-pointer">
+                  <span>Admin Paneli</span>
+                </Link>
+              )}
+              <button 
+                onClick={handleLogout} 
+                className="hover:text-red-300 hover:bg-gray-700 transition-all duration-300 py-2 px-3 rounded-lg text-left flex items-center"
+              >
+                <span>Log out</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/login">
+                <span className="relative inline-block py-2 px-4 rounded-lg font-medium text-white hover:text-blue-200 transition-all duration-300 cursor-pointer group border border-transparent hover:border-blue-400 hover:bg-gray-800/50">
+                  Log In
+                  <span className="absolute inset-0 rounded-lg bg-blue-600/0 group-hover:bg-blue-600/10 transition-all duration-300 pointer-events-none"></span>
+                </span>
+              </Link>
+              <Link href="/auth/register">
+                <span className="inline-block py-2 px-4 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-500 transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5">
+                  Sign Up
+                </span>
+              </Link>
+            </>
+          )}
         </div>
+        
+        {/* Mobile Menu Button */}
+        <button 
+          className="md:hidden focus:outline-none"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          {isMenuOpen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
       </div>
+      
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden mt-2 py-3 px-4 bg-gray-800 rounded-lg border border-gray-700 animate-fade-in">
+          <div className="flex flex-col gap-3">
+            {currentUser ? (
+              <>
+                <Link href="/profile" className={`cursor-pointer ${router.pathname === '/profile' ? 'text-blue-400' : ''}`}>
+                  <div className="flex items-center gap-1 hover:text-blue-300 hover:bg-gray-700 transition-all duration-300 py-2 px-3 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Profile</span>
+                  </div>
+                </Link>
+                {userData?.role === 'admin' && (
+                  <Link href="/admin" className="hover:text-yellow-300 transition-colors py-2 cursor-pointer">
+                    <span>Admin Paneli</span>
+                  </Link>
+                )}
+                <button 
+                  onClick={handleLogout} 
+                  className="hover:text-red-300 transition-colors py-2 text-left flex items-center"
+                >
+                  <span>Log out</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <span className="relative inline-block py-2 px-4 rounded-lg text-white hover:text-blue-200 transition-all duration-300 cursor-pointer group border border-transparent hover:border-blue-400 hover:bg-gray-700/50">
+                    Log In
+                    <span className="absolute inset-0 rounded-lg bg-blue-600/0 group-hover:bg-blue-600/10 transition-all duration-300 pointer-events-none"></span>
+                  </span>
+                </Link>
+                <Link href="/auth/register">
+                  <span className="inline-block py-2 px-4 rounded-lg text-center text-white bg-blue-600 hover:bg-blue-500 transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5">
+                    Sign Up
+                  </span>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
@@ -249,11 +361,46 @@ const SaveWordModal = ({ isOpen, onClose, onSave, membershipType, savedWordsToda
 };
 
 // Kelime kaydetme onay komponenti
-const WordConfirmation = ({ word, onConfirm, onCancel }) => {
+const WordConfirmation = ({ word, onConfirm, onCancel, currentUser, router }) => {
   if (!word) return null;
   
+  // Kullanıcı giriş yapmamışsa login prompt göster
+  if (!currentUser) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-md mx-auto p-6 w-full shadow-2xl transform transition-all">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
+              <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Login Required</h3>
+            <p className="text-gray-600 mb-6">
+              You need to log in to save words to your vocabulary.
+            </p>
+            <div className="flex justify-center gap-3">
+              <button 
+                onClick={onCancel} 
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => router.push('/auth/login')} 
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Log In
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-4 w-full max-w-sm">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-4 w-full max-w-sm z-50">
       <p className="mb-3 text-center">
         Save "<span className="font-bold">{word}</span>" to your vocabulary?
       </p>
@@ -296,6 +443,9 @@ export default function ReadStory() {
   const [showTranslation, setShowTranslation] = useState(false);
   const [translationLoading, setTranslationLoading] = useState(false);
   const [translationPosition, setTranslationPosition] = useState({ x: 0, y: 0 });
+  const [translatedWords, setTranslatedWords] = useState(new Set()); // Translate edilmiş kelimeleri tut
+  const [savedWords, setSavedWords] = useState(new Set()); // Kaydedilmiş kelimeleri tut
+  const [translationLanguage, setTranslationLanguage] = useState('english'); // 'english' veya 'turkish'
   
   // Çeviri limiti için yeni state'ler
   const [translationsToday, setTranslationsToday] = useState(0);
@@ -303,130 +453,185 @@ export default function ReadStory() {
   const [watchingAd, setWatchingAd] = useState(false);
   const [adCompleted, setAdCompleted] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // Tek/çift tıklama çakışmasını önlemek için timer
   let clickTimer = null;
 
   useEffect(() => {
-    if (!currentUser || !id) return;
+    if (!id) return;
     
     async function loadStoryAndUserData() {
       try {
         setLoading(true);
         
-        // Kullanıcı verilerini getir
-        const userDataResult = await getUserData();
-        if (!userDataResult) {
-          router.push('/auth/login');
+        // Önce hikayeyi yükle
+        const storySnapshot = await getDoc(doc(db, "stories", id));
+        
+        if (!storySnapshot.exists()) {
+          alert('Story not found');
+          router.push('/home');
+          setLoading(false);
           return;
         }
         
-        // Günlük kelime kayıt ve çeviri sayısını belirle
-        const today = new Date().toDateString();
-        const lastSaveDate = userDataResult.lastWordSaveDate || '';
-        const lastTranslationDate = userDataResult.lastTranslationDate || '';
+        const storyData = {
+          id: storySnapshot.id,
+          ...storySnapshot.data()
+        };
         
-        if (lastSaveDate === today) {
-          setSavedWordsToday(userDataResult.savedWordsToday || 0);
-        } else {
-          setSavedWordsToday(0);
-          // Günlük kelime sayısını da sıfırla
-          if (userDataResult.savedWordsToday > 0) {
-            await updateDoc(doc(db, "users", currentUser.uid), {
-              savedWordsToday: 0,
-              lastWordSaveDate: today
+        // Ücretli hikayeler için kontrol
+        const storyLevel = storyData.level?.toLowerCase() || '';
+        const isPremiumLevel = ['b1', 'b2'].includes(storyLevel);
+        
+        // A1 seviyesinde ilk 5 hikayeden sonrakiler için premium kontrolü
+        // A2 seviyesinde ilk 3 hikayeden sonrakiler için premium kontrolü
+        let requiresPremiumForA1A2 = false;
+        if (['a1', 'a2'].includes(storyLevel)) {
+          const storiesQuery = query(
+            collection(db, "stories"), 
+            where("level", "==", storyLevel)
+          );
+          const storiesSnapshot = await getDocs(storiesQuery);
+          const allStories = [];
+          storiesSnapshot.forEach((doc) => {
+            allStories.push({
+              id: doc.id,
+              ...doc.data()
             });
+          });
+          
+          // Hikayeleri sırala
+          allStories.sort((a, b) => {
+            const dateA = a.dateAdded?.toDate ? a.dateAdded.toDate() : (a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0));
+            const dateB = b.dateAdded?.toDate ? b.dateAdded.toDate() : (b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0));
+            return dateB - dateA;
+          });
+          
+          // Bu hikayenin index'ini bul
+          const storyIndex = allStories.findIndex(s => s.id === id);
+          // A1 için ilk 5, A2 için ilk 3 hikaye ücretsiz
+          if (storyLevel === 'a1') {
+            requiresPremiumForA1A2 = storyIndex >= 5;
+          } else if (storyLevel === 'a2') {
+            requiresPremiumForA1A2 = storyIndex >= 3;
           }
         }
         
-        if (lastTranslationDate === today) {
-          setTranslationsToday(userDataResult.translationsToday || 0);
-        } else {
-          setTranslationsToday(0);
+        // Kullanıcı varsa verilerini getir
+        let userDataResult = null;
+        if (currentUser) {
+          userDataResult = await getUserData();
           
-          // Günlük çeviri sayısını sıfırla
-          if (userDataResult.translationsToday > 0) {
-            await updateDoc(doc(db, "users", currentUser.uid), {
-              translationsToday: 0,
-              lastTranslationDate: today
-            });
-          }
-        }
-        
-        // Ücretsiz kullanıcı B1 ve üzeri seviyelere erişemez
-        const isFreeUser = ['free', 'basic'].includes(userDataResult.membershipType) || !userDataResult.membershipType;
-        if (isFreeUser) {
-          // Örnek hikaye kontrolü
-          if (!id.startsWith('sample-')) {
-          // Hikayeyi kontrol et
-          const storyDoc = await getDoc(doc(db, "stories", id));
-          
-          if (storyDoc.exists()) {
-            const storyData = storyDoc.data();
-              const storyLevel = storyData.level?.toLowerCase() || '';
-              if (['b1', 'b2', 'c1', 'c2'].includes(storyLevel)) {
-              alert('This level is only available for premium members');
-              router.push('/home');
-              return;
+          if (userDataResult) {
+            // Günlük kelime kayıt ve çeviri sayısını belirle
+            const today = new Date().toDateString();
+            const lastSaveDate = userDataResult.lastWordSaveDate || '';
+            const lastTranslationDate = userDataResult.lastTranslationDate || '';
+            
+            if (lastSaveDate === today) {
+              setSavedWordsToday(userDataResult.savedWordsToday || 0);
+            } else {
+              setSavedWordsToday(0);
+              if (userDataResult.savedWordsToday > 0) {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                  savedWordsToday: 0,
+                  lastWordSaveDate: today
+                });
               }
             }
-          }
-        }
-        
-        // Kullanıcının tamamladığı hikayeleri kontrol et
-        const completedStories = userDataResult.completedStories || [];
-        if (completedStories.includes(id)) {
-          setCompleted(true);
-        }
-        
-        // Hikayeyi Firestore'dan getir
-        const storySnapshot = await getDoc(doc(db, "stories", id));
-        
-        if (storySnapshot.exists()) {
-          setStory({
-            id: storySnapshot.id,
-            ...storySnapshot.data()
-          });
-          
-          // Kullanıcının okuduğu hikaye sayısını güncelle
-          if (isFreeUser) {
-            const today = new Date().toDateString();
             
-            // Eğer bugün ilk kez hikaye okuyorsa
-            if (userDataResult.lastReadDate !== today) {
-              // Kullanıcı verilerini güncelle
+            if (lastTranslationDate === today) {
+              setTranslationsToday(userDataResult.translationsToday || 0);
+            } else {
+              setTranslationsToday(0);
+              if (userDataResult.translationsToday > 0) {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                  translationsToday: 0,
+                  lastTranslationDate: today
+                });
+              }
+            }
+            
+            // Ücretli hikayeler için premium kontrolü
+            const isFreeUser = ['free', 'basic'].includes(userDataResult.membershipType) || !userDataResult.membershipType;
+            if ((isPremiumLevel || requiresPremiumForA1A2) && isFreeUser) {
+              alert('Bu hikaye için premium üyelik gereklidir. Üye olmak için lütfen giriş yapın.');
+              router.push('/upgrade/premium');
+              setLoading(false);
+              return;
+            }
+            
+            // Kullanıcının tamamladığı hikayeleri kontrol et
+            const completedStories = userDataResult.completedStories || [];
+            if (completedStories.includes(id)) {
+              setCompleted(true);
+            }
+            
+            // Kullanıcının okuduğu hikaye sayısını güncelle
+            if (isFreeUser) {
+              const today = new Date().toDateString();
+              if (userDataResult.lastReadDate !== today) {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                  storiesRead: 1,
+                  lastReadDate: today
+                });
+              }
+            }
+            
+            // Eğer translationHistory alanı yoksa, eski viewedTranslations'dan migrate et
+            if (!userDataResult.translationHistory) {
+              const now = new Date().toISOString();
+              const translationHistory = {};
+              
+              if (userDataResult.viewedTranslations && Array.isArray(userDataResult.viewedTranslations)) {
+                userDataResult.viewedTranslations.forEach(word => {
+                  translationHistory[word] = now;
+                });
+              }
+              
+              userDataResult.translationHistory = translationHistory;
               await updateDoc(doc(db, "users", currentUser.uid), {
-                storiesRead: 1,
-                lastReadDate: today
+                translationHistory: translationHistory
               });
+            }
+            
+            setUserData(userDataResult);
+            
+            // Kullanıcının kaydedilmiş kelimelerini yükle
+            try {
+              const userRef = doc(db, "users", currentUser.uid);
+              const savedWordsRef = collection(userRef, "savedWords");
+              const savedWordsSnapshot = await getDocs(savedWordsRef);
+              const savedWordsSet = new Set();
+              savedWordsSnapshot.forEach((doc) => {
+                const wordData = doc.data();
+                if (wordData.word) {
+                  savedWordsSet.add(wordData.word.toLowerCase());
+                }
+              });
+              setSavedWords(savedWordsSet);
+            } catch (error) {
+              console.error("Error loading saved words:", error);
             }
           }
         } else {
-          alert('Story not found');
-          router.push('/home');
-        }
-
-        // Eğer translationHistory alanı yoksa, eski viewedTranslations'dan migrate et
-        if (!userDataResult.translationHistory) {
-          const now = new Date().toISOString();
-          const translationHistory = {};
-          
-          // Eski viewedTranslations verilerini yeni formata çevir
-          if (userDataResult.viewedTranslations && Array.isArray(userDataResult.viewedTranslations)) {
-            userDataResult.viewedTranslations.forEach(word => {
-              translationHistory[word] = now; // Tümünü bugün olarak işaretle
-            });
+          // Kullanıcı giriş yapmamış ve ücretli hikaye ise
+          if (isPremiumLevel || requiresPremiumForA1A2) {
+            if (requiresPremiumForA1A2) {
+              alert('Bu hikaye için premium üyelik gereklidir. Premium üyelik satın almak için lütfen giriş yapın.');
+              router.push('/auth/login');
+            } else {
+              alert('Bu hikaye için üye girişi gereklidir. Üye olmak için lütfen giriş yapın.');
+              router.push('/auth/login');
+            }
+            setLoading(false);
+            return;
           }
-          
-          userDataResult.translationHistory = translationHistory;
-          
-          // Veritabanını güncelle
-          await updateDoc(doc(db, "users", currentUser.uid), {
-            translationHistory: translationHistory
-          });
         }
         
-        setUserData(userDataResult);
+        // Hikayeyi set et
+        setStory(storyData);
       } catch (error) {
         console.error("Error fetching story:", error);
       } finally {
@@ -461,6 +666,14 @@ export default function ReadStory() {
   const handleWordDoubleClick = (e, word) => {
     e.preventDefault();
     if (clickTimer) clearTimeout(clickTimer);
+    
+    // Kullanıcı giriş yapmamışsa uyarı göster
+    if (!currentUser || !userData) {
+      setShowLoginPrompt(true);
+      setSelectedWord(word);
+      return;
+    }
+    
     setSelectedWord(word);
     setShowConfirmation(true); // Onay modalını göster
   };
@@ -528,6 +741,9 @@ export default function ReadStory() {
       // Yerel sayacı güncelle
       setSavedWordsToday(savedWordsToday + 1);
       
+      // Kelimeyi savedWords set'ine ekle
+      setSavedWords(prev => new Set([...prev, word.toLowerCase()]));
+      
       // Başarılı mesajı göster
       const notification = document.createElement('div');
       notification.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
@@ -552,11 +768,11 @@ export default function ReadStory() {
     setTranslationLoading(true);
     
     try {
-      // Ücretsiz kullanıcılar için çeviri limiti kontrolü
-      const isFreeUser = ['free', 'basic'].includes(userData.membershipType) || !userData.membershipType;
+      // Kullanıcı giriş yapmamışsa veya userData yoksa, ücretsiz kullanıcı olarak kabul et
+      const isFreeUser = !currentUser || !userData || ['free', 'basic'].includes(userData?.membershipType) || !userData?.membershipType;
       
-      // Kullanıcının çeviri geçmişini kontrol et (24 saatlik süre kontrolü)
-      const userTranslationHistory = userData.translationHistory || {};
+      // Kullanıcının çeviri geçmişini kontrol et (24 saatlik süre kontrolü) - sadece giriş yapmış kullanıcılar için
+      const userTranslationHistory = userData?.translationHistory || {};
       const now = new Date();
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       
@@ -565,7 +781,8 @@ export default function ReadStory() {
       const hasRecentTranslation = lastTranslationTime && new Date(lastTranslationTime) > twentyFourHoursAgo;
       
       // Eğer bu kelime için yeni bir çeviri sayacı gerekiyorsa ve limit dolmuşsa
-      if (isFreeUser && !hasRecentTranslation && translationsToday >= 10) {
+      // Kullanıcı giriş yapmamışsa limit kontrolü yapma
+      if (currentUser && userData && isFreeUser && !hasRecentTranslation && translationsToday >= 10) {
         setShowAdModal(true);
         setTranslationLoading(false);
         return;
@@ -579,12 +796,22 @@ export default function ReadStory() {
       const querySnapshot = await getDocs(q);
       
       // Çeviri veritabanında var mı kontrol et
-      if (!querySnapshot.empty) {
+      // NOT: Dil seçimi değiştiğinde yeni çeviri yapılması için mevcut çeviriyi kullanmıyoruz
+      // Her zaman seçilen dile göre yeni çeviri yapıyoruz
+      const useExistingTranslation = false; // Dil seçimi nedeniyle her zaman yeni çeviri yap
+      
+      if (useExistingTranslation && !querySnapshot.empty) {
         const existingTranslation = querySnapshot.docs[0].data();
         setTranslatedWord(existingTranslation.translation);
         
+        // Mevcut çeviriyi de set'e ekle
+        if (selectedWordForTranslation) {
+          setTranslatedWords(prev => new Set([...prev, selectedWordForTranslation.toLowerCase()]));
+        }
+        
         // Eğer kullanıcı bu çeviriyi 24 saat içinde görmemişse limit artır
-        if (!hasRecentTranslation && isFreeUser) {
+        // Sadece giriş yapmış kullanıcılar için
+        if (userData && currentUser && !hasRecentTranslation && isFreeUser) {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
           
@@ -625,44 +852,33 @@ Grammatical role: Not available
         }
         
         console.log("Çevirisi yapılacak kelime:", selectedWordForTranslation);
+        console.log("Seçilen dil:", translationLanguage);
         
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // API endpoint'ini kullan
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        
+        // Kullanıcı giriş yapmışsa token ekle
+        if (currentUser) {
+          const token = await currentUser.getIdToken();
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch('/api/translate', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`
-          },
+          headers: headers,
           body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
-            messages: [
-              {
-                role: 'system',
-                content: `
-You are a professional German-to-English translator.
-
-When given a German word and its surrounding sentence, return:
-
-Meaning: (the most accurate meaning in 1-2 words)
-Explanation: (a short explanation, maximum 2 sentences)
-Example sentence: (ALWAYS provide an ENGLISH sentence using the meaning of the word, even if you have to MAKE ONE UP)
-Grammatical role: (ALWAYS give a detailed, context-specific grammatical explanation like "Adjective, attributive role describing the noun [X]" or "Noun, functioning as the subject of the sentence". NEVER just write "noun" or "verb" alone. If you cannot provide details, at least specify like "Noun (subject)", "Verb (past tense)", "Adjective (attributive)" etc.)
-
-Always output ALL of these sections, no matter what.
-If no data is available, write "Not available" under that section — never skip or merge sections.
-
-If the surrounding sentence is missing or does not help, INVENT a simple context yourself to create the example sentence.
-
-Keep each section clear, short, and consistent.
-`
-              },
-              {
-                role: 'user',
-                content: `Word: "${selectedWordForTranslation}"\nSentence: "${story?.content || ''}"`
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 150
+            word: selectedWordForTranslation,
+            context: story?.content || '',
+            targetLanguage: translationLanguage // 'english' veya 'turkish'
           })
+        });
+        
+        console.log("API Request body:", {
+          word: selectedWordForTranslation,
+          context: story?.content || '',
+          targetLanguage: translationLanguage
         });
 
         console.log("API Response Status:", response.status);
@@ -694,20 +910,23 @@ Grammatical role: Not available
         }
 
         const data = await response.json();
-        console.log("OpenAI ham yanıt:", data);
+        console.log("API Response:", data);
 
-        // OpenAI API'den gelen çeviri
-        const translatedWord = data.choices?.[0]?.message?.content?.trim() || '';
+        // API'den gelen çeviri
+        const translatedWord = data.translation || '';
         console.log("Çeviri metni:", translatedWord);
         
-        // Çeviri başarılı mı kontrol et
-        if (!translatedWord || 
+        // Hata kontrolü
+        if (data.error || !translatedWord || 
             translatedWord.includes('Translation failed') ||
             translatedWord.includes('Error occurred') ||
-            translatedWord.includes('Not available')) {
-          setTranslatedWord(`
+            translatedWord.includes('Not available') ||
+            translatedWord.includes('Çeviri başarısız') ||
+            translatedWord.includes('Hata oluştu') ||
+            translatedWord.includes('Mevcut değil')) {
+          setTranslatedWord(data.translation || `
 Meaning: Translation failed
-Explanation: Empty or invalid response from translation service
+Explanation: ${data.error || 'Empty or invalid response from translation service'}
 Example sentence: Not available
 Grammatical role: Not available
           `);
@@ -715,16 +934,19 @@ Grammatical role: Not available
           return;
         }
 
-        // Çeviriyi veritabanına kaydet - SADECE BAŞARILI ÇEVIRILER
-        await addDoc(collection(db, "translations"), {
-          original: selectedWordForTranslation,
-          translation: translatedWord,
-          context: story?.content || '',
-          timestamp: Timestamp.now()
-        });
+        // Çeviriyi veritabanına kaydet - SADECE BAŞARILI ÇEVIRILER (sadece giriş yapmış kullanıcılar için)
+        if (currentUser) {
+          await addDoc(collection(db, "translations"), {
+            original: selectedWordForTranslation,
+            translation: translatedWord,
+            context: story?.content || '',
+            timestamp: Timestamp.now()
+          });
+        }
         
         // Yeni çeviri için her zaman limit artır ve listeye ekle (ücretsiz kullanıcılar için)
-        if (isFreeUser) {
+        // Sadece giriş yapmış kullanıcılar için
+        if (userData && currentUser && isFreeUser) {
           const newTranslationsToday = translationsToday + 1;
           setTranslationsToday(newTranslationsToday);
           
@@ -751,6 +973,11 @@ Grammatical role: Not available
         
         // Çeviriyi state'e kaydet
         setTranslatedWord(translatedWord);
+        
+        // Translate edilmiş kelimeyi set'e ekle
+        if (selectedWordForTranslation) {
+          setTranslatedWords(prev => new Set([...prev, selectedWordForTranslation.toLowerCase()]));
+        }
       }
     } catch (error) {
       console.error('Translation error:', error);
@@ -833,7 +1060,8 @@ Grammatical role: Not available
 
   // Çeviri butonunun pozisyonunu ekrana göre ayarla
   const getTranslationButtonPosition = () => {
-    const buttonHeight = 40;
+    const buttonHeight = 40; // Her buton için yükseklik
+    const totalHeight = buttonHeight * 2 + 4; // İki buton + gap (4px)
     const buttonWidth = 100;
     let left = translationPosition.x;
     let top = translationPosition.y + 5; // Kelimeye daha yakın
@@ -862,8 +1090,8 @@ Grammatical role: Not available
       }
       
       // Alt taraftan taşmayı engelle - buton kelimeden yukarı çıksın
-      if (top + buttonHeight > bottomBoundary) {
-        top = translationPosition.y - buttonHeight - 5;
+      if (top + totalHeight > bottomBoundary) {
+        top = translationPosition.y - totalHeight - 5;
       }
       
       // Üst taraftan da taşarsa, viewport içinde güvenli bir yere koy
@@ -876,8 +1104,14 @@ Grammatical role: Not available
 
   // Hikayeyi tamamlandı olarak işaretle veya tamamlanmamış yap (toggle)
   const handleCompleteStory = async () => {
+    // Kullanıcı giriş yapmamışsa uyarı göster
+    if (!currentUser || !userData) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    
     try {
-      if (!currentUser || !story) return;
+      if (!story) return;
       
       const userRef = doc(db, "users", currentUser.uid);
       const userSnap = await getDoc(userRef);
@@ -952,7 +1186,13 @@ Grammatical role: Not available
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Story Not Found</h1>
             <p className="mb-6">Sorry, we couldn't find the story you're looking for.</p>
-            <button onClick={handleGoBack} className="btn btn-primary">
+            <button 
+              onClick={handleGoBack} 
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 group"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
               Back to Stories
             </button>
           </div>
@@ -972,16 +1212,43 @@ Grammatical role: Not available
       <main className="flex-grow container mx-auto px-4 py-8">
         <button 
           onClick={handleGoBack}
-          className="flex items-center gap-2 text-[#60a5fa] hover:text-[#3b82f6] transition-colors mb-4"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 mb-2 group text-sm"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back to Stories
+          <span className="font-medium">Back to Stories</span>
         </button>
 
         <div className="card">
-          <h1 className="text-3xl font-bold mb-2">{story.title}</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold">{story.title}</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 font-medium">Translation:</span>
+              <div className="flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setTranslationLanguage('english')}
+                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                    translationLanguage === 'english'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  English
+                </button>
+                <button
+                  onClick={() => setTranslationLanguage('turkish')}
+                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                    translationLanguage === 'turkish'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Türkçe
+                </button>
+              </div>
+            </div>
+          </div>
           <div className="flex items-center gap-2 mb-6">
             <span className="px-2 py-1 bg-primary text-white text-sm rounded-md shadow-md" style={{boxShadow: '0px 2px 8px rgba(0,0,0,0.08)'}}>
               Level {story.level.toUpperCase()}
@@ -995,7 +1262,7 @@ Grammatical role: Not available
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {story.readTime} min read
+              {typeof story.readTime === 'string' && story.readTime.includes('min') ? story.readTime : `${story.readTime} min`} read
             </span>
           </div>
           
@@ -1005,8 +1272,12 @@ Grammatical role: Not available
             </svg>
             <div>
               <h3 className="font-semibold mb-1">Reading Tip:</h3>
-              <p>Double-click on any word to save it to your vocabulary!</p>
-              <p className="mt-1">Long-press on any word to translate it!</p>
+              <p>Click on any word to translate it, then click Save to add it to your vocabulary!</p>
+              {!currentUser && (
+                <p className="mt-2 text-sm text-blue-600 font-medium">
+                  💡 <Link href="/auth/login" className="underline hover:text-blue-700">Log in</Link> to save words and access more features!
+                </p>
+              )}
             </div>
           </div>
           
@@ -1025,7 +1296,6 @@ Grammatical role: Not available
                         key={widx}
                         className="hover:bg-yellow-200 transition rounded cursor-pointer px-1 inline-block word-hover"
                         onClick={(e) => handleWordClick(e, word)}
-                        onDoubleClick={(e) => handleWordDoubleClick(e, word)}
                       >
                         {word}
                       </span>
@@ -1041,7 +1311,13 @@ Grammatical role: Not available
           
           <div className="flex flex-col items-center gap-4 mb-6">
             <button 
-              onClick={() => setShowSaveModal(true)} 
+              onClick={() => {
+                if (!currentUser || !userData) {
+                  setShowLoginPrompt(true);
+                } else {
+                  setShowSaveModal(true);
+                }
+              }} 
               className="btn btn-secondary"
             >
               Add Word to Vocabulary
@@ -1071,18 +1347,62 @@ Grammatical role: Not available
       {/* Çeviri butonu */}
       {showTranslateButton && (
         <div 
-          className="translation-button absolute bg-blue-600 text-white px-3 py-1 rounded-md shadow-lg cursor-pointer z-50 hover:bg-blue-700 transition-all duration-200"
+          className="translation-button absolute z-50 flex flex-col gap-1"
           style={{
             left: `${getTranslationButtonPosition().left}px`,
             top: `${getTranslationButtonPosition().top}px`,
-            fontSize: '14px',
-            fontWeight: '500',
-            whiteSpace: 'nowrap',
             pointerEvents: 'auto'
           }}
-          onClick={handleTranslate}
         >
-          Translate
+          <button
+            className="bg-blue-600 text-white px-3 py-1 rounded-md shadow-lg cursor-pointer hover:bg-blue-700 transition-all duration-200"
+            style={{
+              fontSize: '14px',
+              fontWeight: '500',
+              whiteSpace: 'nowrap'
+            }}
+            onClick={handleTranslate}
+          >
+            Translate
+          </button>
+          <button
+            className={`px-3 py-1 rounded-md shadow-lg transition-all duration-200 ${
+              savedWords.has(selectedWordForTranslation.toLowerCase())
+                ? 'bg-gray-500 text-white cursor-not-allowed'
+                : translatedWords.has(selectedWordForTranslation.toLowerCase())
+                ? 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed hover:bg-gray-400'
+            }`}
+            style={{
+              fontSize: '14px',
+              fontWeight: '500',
+              whiteSpace: 'nowrap'
+            }}
+            onClick={() => {
+              if (!currentUser || !userData) {
+                setShowLoginPrompt(true);
+                setShowTranslateButton(false);
+                return;
+              }
+              
+              // Zaten kaydedilmiş mi kontrol et
+              if (savedWords.has(selectedWordForTranslation.toLowerCase())) {
+                return; // Zaten kaydedilmiş, hiçbir şey yapma
+              }
+              
+              // Önce translate edilmiş mi kontrol et
+              if (!translatedWords.has(selectedWordForTranslation.toLowerCase())) {
+                alert('Please translate the word first before saving it!');
+                return;
+              }
+              
+              handleDirectSave(selectedWordForTranslation);
+              setShowTranslateButton(false);
+            }}
+            disabled={!translatedWords.has(selectedWordForTranslation.toLowerCase()) || savedWords.has(selectedWordForTranslation.toLowerCase())}
+          >
+            {savedWords.has(selectedWordForTranslation.toLowerCase()) ? 'Already Saved' : 'Save'}
+          </button>
         </div>
       )}
       
@@ -1137,25 +1457,31 @@ Grammatical role: Not available
           ) : (
             <div className="mt-1" style={{lineHeight: '1.7'}}>
               {(() => {
-                // Meaning için esnek ve fallback
+                const isTr = translationLanguage === 'turkish';
+                const na = isTr ? 'Mevcut değil' : 'Not available';
+
+                // Meaning için esnek ve fallback (TR başlıkları dahil)
                 let meaning = '';
                 const meaningMatch = translatedWord.match(/Meaning:\s*([^\n]*)/i) 
-                  || translatedWord.match(/Translation:\s*([^\n]*)/i);
+                  || translatedWord.match(/Translation:\s*([^\n]*)/i)
+                  || translatedWord.match(/Anlam:\s*([^\n]*)/i);
                 if (meaningMatch && meaningMatch[1]) {
                   meaning = meaningMatch[1].trim();
                 } else {
-                  meaning = 'Not available';
+                  meaning = na;
                 }
 
-                // Explanation
+                // Explanation (TR başlıkları dahil)
                 let explanation = '';
-                const explanationMatch = translatedWord.match(/Explanation:\s*([\s\S]*?)(Example sentence:|Grammatical role:|Grammatical function:|Grammar:|Function:|Role:|$)/i);
-                explanation = explanationMatch && explanationMatch[1]?.trim() ? explanationMatch[1].trim() : 'Not available';
+                const explanationMatch = translatedWord.match(/Explanation:\s*([\s\S]*?)(Example sentence:|Grammatical role:|Grammatical function:|Grammar:|Function:|Role:|$)/i)
+                  || translatedWord.match(/Açıklama:\s*([\s\S]*?)(Örnek cümle:|Gramer rolü:|Example sentence:|Grammatical role:|$)/i);
+                explanation = explanationMatch && explanationMatch[1]?.trim() ? explanationMatch[1].trim() : na;
 
-                // Example sentence için gelişmiş fallback
+                // Example sentence (TR başlıkları dahil)
                 let example = '';
                 const exampleMatch = translatedWord.match(/Example sentence:\s*([\s\S]*?)(Grammatical role:|Grammatical function:|Grammar:|Function:|Role:|Meaning:|Explanation:|$)/i)
-                  || translatedWord.match(/Example:\s*([\s\S]*?)(Grammatical role:|Grammatical function:|Grammar:|Function:|Role:|Meaning:|Explanation:|$)/i);
+                  || translatedWord.match(/Example:\s*([\s\S]*?)(Grammatical role:|Grammatical function:|Grammar:|Function:|Role:|Meaning:|Explanation:|$)/i)
+                  || translatedWord.match(/Örnek cümle:\s*([\s\S]*?)(Gramer rolü:|Meaning:|Explanation:|Grammatical role:|$)/i);
 
                 if (exampleMatch && exampleMatch[1]?.trim()) {
                   example = exampleMatch[1].trim();
@@ -1165,26 +1491,26 @@ Grammatical role: Not available
                     if (quoteMatch) {
                       example = quoteMatch[0].replace(/"/g, '');
                     } else {
-                      example = 'Not available';
+                      example = na;
                     }
                   } else {
-                    example = 'Not available';
+                    example = na;
                   }
                 }
 
-                // Grammatical role için gelişmiş regex ve fallback
+                // Grammatical role / Gramer rolü
                 let grammar = '';
                 const grammarMatch = translatedWord.match(/Grammatical role:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Grammatical function:|Grammar:|Function:|Role:|$)/i)
                   || translatedWord.match(/Grammatical function:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Grammar:|Function:|Role:|$)/i)
                   || translatedWord.match(/Grammar:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Function:|Role:|$)/i)
                   || translatedWord.match(/Function:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Role:|$)/i)
-                  || translatedWord.match(/Role:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|$)/i);
+                  || translatedWord.match(/Role:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|$)/i)
+                  || translatedWord.match(/Gramer rolü:\s*([\s\S]*?)(Anlam:|Açıklama:|Örnek cümle:|Meaning:|Explanation:|Example sentence:|$)/i);
                 if (grammarMatch && grammarMatch[1]?.trim()) {
                   grammar = grammarMatch[1].trim();
-                  // Sadece çok tembel cevapları reddet, basit ama faydalı olanları kabul et
                   if (
                     grammar.toLowerCase().includes('see explanation above') ||
-                    grammar.length < 8  // 15'ten 8'e indirdik
+                    grammar.length < 8
                   ) {
                     grammar = '';
                   }
@@ -1192,10 +1518,10 @@ Grammatical role: Not available
                 // Fallback: Explanation içinde gramatik bilgi ara
                 if (!grammar) {
                   const lowerExp = explanation.toLowerCase();
-                  if (lowerExp.includes('adverb')) grammar = 'Adverb (detected from explanation)';
-                  else if (lowerExp.includes('verb')) grammar = 'Verb (detected from explanation)';
-                  else if (lowerExp.includes('noun')) grammar = 'Noun (detected from explanation)';
-                  else grammar = 'Not available';
+                  if (lowerExp.includes('adverb')) grammar = isTr ? 'Zarf (açıktan yakalandı)' : 'Adverb (detected from explanation)';
+                  else if (lowerExp.includes('verb')) grammar = isTr ? 'Fiil (açıktan yakalandı)' : 'Verb (detected from explanation)';
+                  else if (lowerExp.includes('noun')) grammar = isTr ? 'İsim (açıktan yakalandı)' : 'Noun (detected from explanation)';
+                  else grammar = na;
                 }
 
                 return (
@@ -1285,7 +1611,42 @@ Grammatical role: Not available
           word={selectedWord} 
           onConfirm={handleConfirmSave} 
           onCancel={() => setShowConfirmation(false)}
+          currentUser={currentUser}
+          router={router}
         />
+      )}
+
+      {/* Login Prompt Modal */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md mx-auto p-6 w-full shadow-2xl transform transition-all">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
+                <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Login Required</h3>
+              <p className="text-gray-600 mb-6">
+                Please log in to use this feature. You can save words, translate, and access more features after logging in.
+              </p>
+              <div className="flex justify-center gap-3">
+                <button 
+                  onClick={() => setShowLoginPrompt(false)} 
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => router.push('/auth/login')} 
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Log In
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Kelime kaydetme limit modal'i */}

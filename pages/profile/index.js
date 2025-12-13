@@ -276,14 +276,14 @@ export default function Profile() {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className="mb-6">
+        <div className="mb-4">
           <Link href="/home">
-            <div className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors bg-white hover:bg-blue-50 rounded-lg px-4 py-2 shadow-sm border border-blue-200 hover:border-blue-300 cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 group text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span className="font-medium">Back to Home</span>
-            </div>
+            </button>
           </Link>
         </div>
 
@@ -359,13 +359,7 @@ export default function Profile() {
                     <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-600">Access to A1 and A2 levels</span>
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-gray-600">Translate 20 words a day</span>
+                    <span className="text-gray-600">Access to limited A1 and A2 levels</span>
                   </li>
                   <li className="flex items-center">
                     <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -377,7 +371,7 @@ export default function Profile() {
                     <svg className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <span className="text-gray-400">Access to premium levels (B1-C2)</span>
+                    <span className="text-gray-400">Access to premium levels (B1-B2)</span>
                   </li>
                 </ul>
                 <div className="pt-4 border-t border-gray-100">
@@ -406,13 +400,7 @@ export default function Profile() {
                     <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-600">Access to all levels (A1-C2)</span>
-                  </li>
-                  <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-gray-600">Unlimited word translations</span>
+                    <span className="text-gray-600">Access to all levels and stories (A1-B2)</span>
                   </li>
                   <li className="flex items-center">
                     <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

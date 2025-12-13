@@ -14,7 +14,11 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 const AuthContext = createContext();
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }
 
 export function AuthProvider({ children }) {
@@ -254,6 +258,7 @@ export function AuthProvider({ children }) {
 
   // Auth durumu değişince çalış
   useEffect(() => {
+    let timeoutId;
     try {
       const auth = getFirebaseAuth();
       if (!auth) {
@@ -263,14 +268,25 @@ export function AuthProvider({ children }) {
         return () => {};
       }
       
+      // Timeout ekle - 5 saniye içinde auth state değişmezse loading'i false yap
+      timeoutId = setTimeout(() => {
+        console.warn("Auth state change timeout - forcing loading to false");
+        setLoading(false);
+      }, 5000);
+      
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        clearTimeout(timeoutId);
         setCurrentUser(user);
         setLoading(false);
       });
       
-      return unsubscribe;
+      return () => {
+        clearTimeout(timeoutId);
+        unsubscribe();
+      };
     } catch (error) {
       console.error("Auth state error:", error);
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
       setError(error.message || "An error occurred in authentication");
       return () => {};

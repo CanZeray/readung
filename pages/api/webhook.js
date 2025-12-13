@@ -113,6 +113,12 @@ export default async function handler(req, res) {
   let event;
 
   try {
+    // Webhook secret kontrolü eksik
+    if (!webhookSecret) {
+      console.error('STRIPE_WEBHOOK_SECRET is not defined');
+      return res.status(500).json({ error: 'Webhook secret not configured' });
+    }
+
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
     console.log('Webhook event received:', event.type);
 

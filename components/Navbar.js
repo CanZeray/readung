@@ -5,17 +5,19 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
   const router = useRouter();
-  const { logout, getUserData } = useAuth();
+  const { currentUser, logout, getUserData } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     async function fetchUser() {
-      const data = await getUserData?.();
-      setUserData(data);
+      if (currentUser) {
+        const data = await getUserData?.();
+        setUserData(data);
+      }
     }
     fetchUser();
-  }, [getUserData]);
+  }, [currentUser, getUserData]);
 
   const handleLogout = async () => {
     try {
@@ -29,39 +31,57 @@ export default function Navbar() {
   return (
     <nav className="bg-gray-900 text-white px-4 py-3 shadow-md sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center">
-        <Link href="/home" className="text-3xl font-bold flex items-center group hover:scale-105 transition-transform">
-          <span className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-blue-500 group-hover:text-blue-300 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <Link href="/home" className="text-3xl font-bold flex items-center group hover:scale-105 transition-transform cursor-pointer">
+          <span className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-800 transition-all duration-300 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-blue-500 group-hover:text-blue-300 transition-colors duration-300 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <span className="text-blue-500 font-bold group-hover:text-blue-300 transition-colors duration-300">Readung</span>
+            <span className="text-blue-500 font-bold group-hover:text-blue-300 transition-colors duration-300 cursor-pointer">Readung</span>
           </span>
         </Link>
         
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-5">
-          <Link href="/profile" className={`font-medium cursor-pointer ${router.pathname === '/profile' ? 'text-blue-400' : ''}`}>
-            <div className="flex items-center gap-1 hover:text-blue-300 hover:bg-gray-800 transition-all duration-300 px-3 py-2 rounded-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span>Profile</span>
-            </div>
-          </Link>
-          {userData?.role === 'admin' && (
-            <Link href="/admin" className="hover:text-yellow-300 transition-colors font-medium cursor-pointer">
-              <span>Admin Paneli</span>
-            </Link>
+          {currentUser ? (
+            <>
+              <Link href="/profile" className={`font-medium cursor-pointer ${router.pathname === '/profile' ? 'text-blue-400' : ''}`}>
+                <div className="flex items-center gap-1 hover:text-blue-300 hover:bg-gray-800 transition-all duration-300 px-3 py-2 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>Profile</span>
+                </div>
+              </Link>
+              {userData?.role === 'admin' && (
+                <Link href="/admin" className="hover:text-yellow-300 transition-colors font-medium cursor-pointer">
+                  <span>Admin Paneli</span>
+                </Link>
+              )}
+              <button 
+                onClick={handleLogout} 
+                className="hover:text-red-300 hover:bg-gray-700 transition-all duration-300 py-2 px-3 rounded-lg text-left flex items-center"
+              >
+                <span>Log out</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/login">
+                <span className="relative inline-block py-2 px-4 rounded-lg font-medium text-white hover:text-blue-200 transition-all duration-300 cursor-pointer group border border-transparent hover:border-blue-400 hover:bg-gray-800/50">
+                  Log In
+                  <span className="absolute inset-0 rounded-lg bg-blue-600/0 group-hover:bg-blue-600/10 transition-all duration-300 pointer-events-none"></span>
+                </span>
+              </Link>
+              <Link href="/auth/register">
+                <span className="inline-block py-2 px-4 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-500 transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5">
+                  Sign Up
+                </span>
+              </Link>
+            </>
           )}
-          <button 
-            onClick={handleLogout} 
-            className="hover:text-red-300 hover:bg-gray-700 transition-all duration-300 py-2 px-3 rounded-lg text-left flex items-center"
-          >
-            <span>Log out</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-          </button>
         </div>
         
         {/* Mobile Menu Button */}
@@ -85,28 +105,46 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden mt-2 py-3 px-4 bg-gray-800 rounded-lg border border-gray-700 animate-fade-in">
           <div className="flex flex-col gap-3">
-            <Link href="/profile" className={`cursor-pointer ${router.pathname === '/profile' ? 'text-blue-400' : ''}`}>
-              <div className="flex items-center gap-1 hover:text-blue-300 hover:bg-gray-700 transition-all duration-300 py-2 px-3 rounded-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Profile</span>
-              </div>
-            </Link>
-            {userData?.role === 'admin' && (
-              <Link href="/admin" className="hover:text-yellow-300 transition-colors py-2 cursor-pointer">
-                <span>Admin Paneli</span>
-              </Link>
+            {currentUser ? (
+              <>
+                <Link href="/profile" className={`cursor-pointer ${router.pathname === '/profile' ? 'text-blue-400' : ''}`}>
+                  <div className="flex items-center gap-1 hover:text-blue-300 hover:bg-gray-700 transition-all duration-300 py-2 px-3 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Profile</span>
+                  </div>
+                </Link>
+                {userData?.role === 'admin' && (
+                  <Link href="/admin" className="hover:text-yellow-300 transition-colors py-2 cursor-pointer">
+                    <span>Admin Paneli</span>
+                  </Link>
+                )}
+                <button 
+                  onClick={handleLogout} 
+                  className="hover:text-red-300 transition-colors py-2 text-left flex items-center"
+                >
+                  <span>Log out</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <span className="relative inline-block py-2 px-4 rounded-lg text-white hover:text-blue-200 transition-all duration-300 cursor-pointer group border border-transparent hover:border-blue-400 hover:bg-gray-700/50">
+                    Log In
+                    <span className="absolute inset-0 rounded-lg bg-blue-600/0 group-hover:bg-blue-600/10 transition-all duration-300 pointer-events-none"></span>
+                  </span>
+                </Link>
+                <Link href="/auth/register">
+                  <span className="inline-block py-2 px-4 rounded-lg text-center text-white bg-blue-600 hover:bg-blue-500 transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5">
+                    Sign Up
+                  </span>
+                </Link>
+              </>
             )}
-            <button 
-              onClick={handleLogout} 
-              className="hover:text-red-300 transition-colors py-2 text-left flex items-center"
-            >
-              <span>Log out</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
           </div>
         </div>
       )}
