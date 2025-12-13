@@ -447,11 +447,7 @@ export default function ReadStory() {
   const [savedWords, setSavedWords] = useState(new Set()); // Kaydedilmiş kelimeleri tut
   const [translationLanguage, setTranslationLanguage] = useState('english'); // 'english' veya 'turkish'
   
-  // Çeviri limiti için yeni state'ler
-  const [translationsToday, setTranslationsToday] = useState(0);
-  const [showAdModal, setShowAdModal] = useState(false);
-  const [watchingAd, setWatchingAd] = useState(false);
-  const [adCompleted, setAdCompleted] = useState(false);
+  // Kelime kaydetme limiti için state (translate limiti kaldırıldı)
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
@@ -541,17 +537,7 @@ export default function ReadStory() {
               }
             }
             
-            if (lastTranslationDate === today) {
-              setTranslationsToday(userDataResult.translationsToday || 0);
-            } else {
-              setTranslationsToday(0);
-              if (userDataResult.translationsToday > 0) {
-                await updateDoc(doc(db, "users", currentUser.uid), {
-                  translationsToday: 0,
-                  lastTranslationDate: today
-                });
-              }
-            }
+            // Translate limiti kaldırıldı - translationsToday takibi artık gerekli değil
             
             // Ücretli hikayeler için premium kontrolü
             const isFreeUser = ['free', 'basic'].includes(userDataResult.membershipType) || !userDataResult.membershipType;
@@ -780,13 +766,7 @@ export default function ReadStory() {
       const lastTranslationTime = userTranslationHistory[selectedWordForTranslation];
       const hasRecentTranslation = lastTranslationTime && new Date(lastTranslationTime) > twentyFourHoursAgo;
       
-      // Eğer bu kelime için yeni bir çeviri sayacı gerekiyorsa ve limit dolmuşsa
-      // Kullanıcı giriş yapmamışsa limit kontrolü yapma
-      if (currentUser && userData && isFreeUser && !hasRecentTranslation && translationsToday >= 10) {
-        setShowAdModal(true);
-        setTranslationLoading(false);
-        return;
-      }
+      // Translate limiti kaldırıldı - herkes limitsiz translate yapabilir
       
       setShowTranslation(true);
       
@@ -809,22 +789,17 @@ export default function ReadStory() {
           setTranslatedWords(prev => new Set([...prev, selectedWordForTranslation.toLowerCase()]));
         }
         
-        // Eğer kullanıcı bu çeviriyi 24 saat içinde görmemişse limit artır
+        // Çeviri geçmişini güncelle (limit kontrolü kaldırıldı)
         // Sadece giriş yapmış kullanıcılar için
-        if (userData && currentUser && !hasRecentTranslation && isFreeUser) {
-          const newTranslationsToday = translationsToday + 1;
-          setTranslationsToday(newTranslationsToday);
-          
+        if (userData && currentUser && !hasRecentTranslation) {
           // Kullanıcının çeviri geçmişini güncelle
           const updatedTranslationHistory = {
             ...userTranslationHistory,
             [selectedWordForTranslation]: now.toISOString()
           };
           
-          // Veritabanını güncelle
+          // Veritabanını güncelle (translationsToday artık güncellenmiyor)
           await updateDoc(doc(db, "users", currentUser.uid), {
-            translationsToday: newTranslationsToday,
-            lastTranslationDate: new Date().toDateString(),
             translationHistory: updatedTranslationHistory
           });
           
@@ -837,19 +812,7 @@ export default function ReadStory() {
         }
       } else {
         // Kelime daha önce çevrilmemişse - ChatGPT API ile çeviri yap
-        console.log("OpenAI API Key kontrol:", process.env.NEXT_PUBLIC_OPENAI_API_KEY ? 'Mevcut' : 'Eksik');
-        
-        // Environment variable kontrol et
-        if (!process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
-          setTranslatedWord(`
-Meaning: Translation service unavailable
-Explanation: OpenAI API key is not configured. Please contact the administrator to set up translation services.
-Example sentence: Not available
-Grammatical role: Not available
-          `);
-          setTranslationLoading(false);
-          return;
-        }
+        // API key kontrolü server-side'da yapılıyor, client-side kontrolü kaldırıldı
         
         console.log("Çevirisi yapılacak kelime:", selectedWordForTranslation);
         console.log("Seçilen dil:", translationLanguage);
@@ -944,22 +907,17 @@ Grammatical role: Not available
           });
         }
         
-        // Yeni çeviri için her zaman limit artır ve listeye ekle (ücretsiz kullanıcılar için)
+        // Çeviri geçmişini güncelle (limit kontrolü kaldırıldı)
         // Sadece giriş yapmış kullanıcılar için
-        if (userData && currentUser && isFreeUser) {
-          const newTranslationsToday = translationsToday + 1;
-          setTranslationsToday(newTranslationsToday);
-          
+        if (userData && currentUser) {
           // Kullanıcının çeviri geçmişini güncelle
           const updatedTranslationHistory = {
             ...userTranslationHistory,
             [selectedWordForTranslation]: now.toISOString()
           };
           
-          // Veritabanını güncelle
+          // Veritabanını güncelle (translationsToday artık güncellenmiyor)
           await updateDoc(doc(db, "users", currentUser.uid), {
-            translationsToday: newTranslationsToday,
-            lastTranslationDate: new Date().toDateString(),
             translationHistory: updatedTranslationHistory
           });
           
@@ -1002,36 +960,6 @@ Grammatical role: Not available
     }
   };
 
-  // Reklam izleme fonksiyonu
-  const handleWatchAd = async () => {
-    setWatchingAd(true);
-    
-    // Gerçek bir reklam entegrasyonu yerine simülasyon yapıyoruz
-    // Normalde burada AdMob, Unity Ads vb. reklam SDK'ları kullanılır
-    setTimeout(async () => {
-      setWatchingAd(false);
-      setAdCompleted(true);
-      
-      // Kullanıcıya 10 çeviri hakkı daha ver
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        translationsToday: 0 // veya 10 çeviriden devam etmesi için: translationsToday - 10
-      });
-      
-      // State'i güncelle
-      setTranslationsToday(0); // veya 10 çeviriden devam etmesi için: translationsToday - 10
-      
-      // 3 saniye sonra modal'ı kapat
-      setTimeout(() => {
-        setShowAdModal(false);
-        setAdCompleted(false);
-      }, 3000);
-    }, 5000); // 5 saniyelik "reklam izleme" simülasyonu
-  };
-
-  // Reklam izleme modalını kapat
-  const handleCloseAdModal = () => {
-    setShowAdModal(false);
-  };
 
   // Belge tıklandığında çeviri UI'ı kapat
   const handleDocumentClick = (e) => {
@@ -1432,18 +1360,6 @@ Grammatical role: Not available
           </button>
           <div className="text-sm font-medium mb-2">
             {selectedWordForTranslation}
-            
-            {/* Ücretsiz kullanıcılar için çeviri limiti göstergesi */}
-            {userData && (['free', 'basic'].includes(userData.membershipType) || !userData.membershipType) && (
-              <div className="mt-1 text-xs text-gray-500 flex items-center">
-                <span>Translations: {translationsToday}/10</span>
-                {translationsToday >= 5 && (
-                  <Link href="/upgrade/premium" className="ml-2 text-blue-600 hover:underline text-xs">
-                    Upgrade to Premium
-                  </Link>
-                )}
-              </div>
-            )}
           </div>
           
           {translationLoading ? (
@@ -1567,43 +1483,6 @@ Grammatical role: Not available
         savedWordsToday={savedWordsToday}
       />
 
-      {/* Çeviri Limit Modalı */}
-      {showAdModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-md mx-auto p-6 w-full shadow-lg" style={{ maxWidth: '400px', borderRadius: '16px' }}>
-            <div className="flex items-center mb-4">
-              <span className="mr-2">🔒</span>
-              <h3 className="text-2xl font-bold text-gray-900">You've Reached Your Daily Limit</h3>
-            </div>
-            
-            <div className="w-full bg-gray-200 h-2 rounded-full mb-6">
-              <div className="bg-blue-500 h-2 rounded-full" style={{ width: '100%' }}></div>
-            </div>
-            
-            <p className="mb-6 text-gray-600" style={{ lineHeight: '1.5', fontSize: '16px' }}>
-              You've reached your free daily translation limit (10 translations). Upgrade to Premium for unlimited translations and access to all features.
-            </p>
-            
-            <Link href="/upgrade/premium">
-              <button className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg mb-3 font-medium transition-all">
-                <span className="flex items-center justify-center">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                  </svg>
-                  Upgrade to Premium
-                </span>
-              </button>
-            </Link>
-            
-            <button
-              onClick={handleCloseAdModal}
-              className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium"
-            >
-              Continue Reading
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Kelime kaydetme onayı */}
       {showConfirmation && (
