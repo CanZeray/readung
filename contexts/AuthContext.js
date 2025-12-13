@@ -228,10 +228,9 @@ export function AuthProvider({ children }) {
           userData.membershipType = 'basic';
         }
         
-        // Eğer userData içinde role alanı yoksa ve currentUser.email
-        // admin@readung.app veya geliştirici emailiniz ile eşleşiyorsa
-        // admin rolünü otomatik olarak ekleyin (sadece ilk kontrol için)
-        if (!userData.role && 
+        // Admin rolü atama - SADECE DEVELOPMENT ORTAMINDA
+        // Production'da admin rolü manuel olarak Firestore'da set edilmelidir
+        if (process.env.NODE_ENV === 'development' && !userData.role && 
             (currentUser.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL || 
              currentUser.email === 'admin@readung.app')) {
           userData.role = 'admin';
@@ -239,7 +238,7 @@ export function AuthProvider({ children }) {
           // Bu rolü veritabanına kaydet
           try {
             await setDoc(docRef, { role: 'admin' }, { merge: true });
-            console.log('Admin role added to user');
+            console.log('Admin role added to user (development only)');
           } catch (error) {
             console.error('Error updating admin role:', error);
           }
