@@ -68,6 +68,18 @@ export default function Login() {
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          {/* Back to Homepage Button */}
+          <div className="mb-4">
+            <Link href="/home">
+              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 group text-sm">
+                <svg className="h-4 w-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="font-medium">Back to Homepage</span>
+              </button>
+            </Link>
+          </div>
+
           <Link href="/">
             <div className="flex justify-center items-center cursor-pointer group">
               <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg mr-3 group-hover:scale-110 transition-transform duration-200">
