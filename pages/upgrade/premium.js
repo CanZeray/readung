@@ -2,14 +2,10 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import Navbar from '../../components/Navbar';
-
-// Stripe public key from environment variable
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 // Feature comparison component
 const PlanFeature = ({ feature, isPremium, isFree }) => {

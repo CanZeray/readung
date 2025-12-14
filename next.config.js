@@ -23,6 +23,17 @@ const nextConfig = {
       // Server-side'da environment variables'ı zorla yükle
       require('dotenv').config({ path: './.env.local' });
     }
+    
+    // Fix for Stripe.js module resolution error
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    
     return config;
   },
 
