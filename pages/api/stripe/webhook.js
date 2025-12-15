@@ -110,13 +110,25 @@ export default async function handler(req, res) {
   const buf = await buffer(req);
   const sig = req.headers['stripe-signature'];
 
+  // Debug logging
+  console.log('Webhook received - Secret exists:', !!webhookSecret);
+  console.log('Signature header exists:', !!sig);
+  if (webhookSecret) {
+    console.log('Webhook secret starts with:', webhookSecret.substring(0, 10) + '...');
+  }
+
   let event;
 
   try {
-    // Webhook secret kontrolü eksik
+    // Webhook secret kontrolü
     if (!webhookSecret) {
       console.error('STRIPE_WEBHOOK_SECRET is not defined');
       return res.status(500).json({ error: 'Webhook secret not configured' });
+    }
+
+    if (!sig) {
+      console.error('Stripe signature header is missing');
+      return res.status(400).json({ error: 'Missing stripe-signature header' });
     }
 
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
@@ -215,7 +227,21 @@ export default async function handler(req, res) {
     res.status(200).json({ received: true });
   } catch (err) {
     console.error('Webhook error:', err.message);
-    return res.status(400).json({ error: `Webhook Error: ${err.message}` });
+    console.error('Error type:', err.type);
+    console.error('Error stack:', err.stack);
+    console.error('Webhook secret exists:', !!webhookSecret);
+    console.error('Signature header:', sig ? 'present' : 'missing');
+    
+    // Daha detaylı hata mesajı
+    let errorMessage = `Webhook Error: ${err.message}`;
+    if (err.type === 'StripeSignatureVerificationError') {
+      errorMessage = 'Webhook signature verification failed. Make sure STRIPE_WEBHOOK_SECRET matches the secret from Stripe CLI or Dashboard.';
+    }
+    
+    return res.status(400).json({ 
+      error: errorMessage,
+      type: err.type || 'UnknownError'
+    });
   }
 }
 
