@@ -37,11 +37,13 @@ export default async function handler(req, res) {
     
     console.log('Translation request - Word:', word, 'Target Language:', targetLanguage, 'isTurkish:', isTurkish);
 
-    console.log('Translation API called for word:', word);
+    // OpenAI API key'ini belirle (öncelik server-side KEY)
+    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    console.log('Translation API called for word:', word, 'API key exists:', !!apiKey, 'uses NEXT_PUBLIC fallback:', !process.env.OPENAI_API_KEY && !!process.env.NEXT_PUBLIC_OPENAI_API_KEY);
 
     // OpenAI API key kontrol et
-    if (!process.env.OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY not found');
+    if (!apiKey) {
+      console.error('OPENAI_API_KEY not found (server or public)');
       return res.status(500).json({ 
         error: 'Translation service not configured',
         translation: `
@@ -58,7 +60,7 @@ Grammatical role: Not available
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
