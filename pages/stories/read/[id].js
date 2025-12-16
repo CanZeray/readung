@@ -1069,12 +1069,11 @@ Grammatical role: Not available
           });
           setCompleted(true);
           
-          // Başarılı mesaj göster
-          const notification = document.createElement('div');
-          notification.className = 'fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
-          notification.innerHTML = 'Congratulations! You have completed the story.';
-          document.body.appendChild(notification);
-          setTimeout(() => { notification.remove(); }, 2000);
+          // Önceki sayfaya dön ve bildirim göster
+          const storyLevel = story.level?.toLowerCase() || 'a1';
+          setTimeout(() => {
+            router.push(`/stories/${storyLevel}?completed=${id}`);
+          }, 500);
         }
       }
     } catch (error) {
@@ -1201,6 +1200,9 @@ Grammatical role: Not available
             <div>
               <h3 className="font-semibold mb-1">Reading Tip:</h3>
               <p>Click on any word to translate it, then click Save to add it to your vocabulary!</p>
+              <p className="mt-2 text-sm text-blue-700 font-medium">
+                ⚠️ To save a word, you must first translate it.
+              </p>
               {!currentUser && (
                 <p className="mt-2 text-sm text-blue-600 font-medium">
                   💡 <Link href="/auth/login" className="underline hover:text-blue-700">Log in</Link> to save words and access more features!

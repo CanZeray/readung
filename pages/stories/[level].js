@@ -14,6 +14,7 @@ export default function StoryList() {
   const [levelName, setLevelName] = useState('');
   const [membershipType, setMembershipType] = useState('free');
   const [loading, setLoading] = useState(true);
+  const [completedStories, setCompletedStories] = useState([]);
   const { currentUser, getUserData } = useAuth();
 
   useEffect(() => {
@@ -30,9 +31,11 @@ export default function StoryList() {
           userData = await getUserData();
           if (userData) {
             setMembershipType(userData.membershipType || 'free');
+            setCompletedStories(userData.completedStories || []);
           }
         } else {
           setMembershipType('free');
+          setCompletedStories([]);
         }
         
         // Ücretli hikayeler için kontrol (sadece giriş yapmamış veya free/basic kullanıcılar için)
@@ -89,6 +92,97 @@ export default function StoryList() {
     
     fetchUserAndStories();
   }, [currentUser, level, router, getUserData]);
+
+  // URL'den completed parametresini kontrol et ve bildirim göster
+  useEffect(() => {
+    if (router.query.completed) {
+      // Overlay oluştur
+      const overlay = document.createElement('div');
+      overlay.className = 'fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center';
+      
+      // Bildirim kartı
+      const notification = document.createElement('div');
+      notification.className = 'bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100';
+      notification.innerHTML = `
+        <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-t-2xl p-6 text-center">
+          <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-2">Story Completed! 🎉</h3>
+        </div>
+        <div class="p-6 text-center">
+          <p class="text-gray-700 text-lg mb-4">Congratulations! You have successfully completed this story.</p>
+          <p class="text-gray-500 text-sm">Keep up the great work and continue learning!</p>
+        </div>
+        <div class="px-6 pb-6">
+          <button class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+            Continue Learning
+          </button>
+        </div>
+      `;
+      
+      // Butona tıklama olayı
+      const handleClose = () => {
+        overlay.style.opacity = '0';
+        notification.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          if (overlay.parentNode) {
+            overlay.remove();
+          }
+          // URL'den completed parametresini kaldır
+          router.replace(`/stories/${level}`, undefined, { shallow: true });
+        }, 300);
+      };
+      
+      // Overlay'e tıklama (sadece overlay'e direkt tıklanırsa)
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          handleClose();
+        }
+      });
+      
+      // Notification'a tıklama olaylarını durdur (overlay'e yayılmasın)
+      notification.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      
+      overlay.appendChild(notification);
+      document.body.appendChild(overlay);
+      
+      // Buton event listener'ı - DOM'a eklendikten sonra
+      setTimeout(() => {
+        const button = notification.querySelector('button');
+        if (button) {
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handleClose();
+          });
+        }
+      }, 10);
+      
+      // Animasyon için küçük gecikme
+      setTimeout(() => {
+        notification.style.transform = 'scale(1)';
+      }, 10);
+      
+      // Otomatik kapanma
+      const autoCloseTimeout = setTimeout(() => {
+        if (overlay.parentNode) {
+          handleClose();
+        }
+      }, 5000);
+      
+      // Cleanup function
+      return () => {
+        clearTimeout(autoCloseTimeout);
+        if (overlay.parentNode) {
+          overlay.remove();
+        }
+      };
+    }
+  }, [router.query.completed, router, level]);
 
   // Hikaye okuma işleyicisi
   const handleReadStory = async (storyId) => {
@@ -245,11 +339,24 @@ export default function StoryList() {
               const requiresPremium = isA1AfterFirst3 || isA2AfterFirst3;
               const isFreeUser = !currentUser || ['free', 'basic'].includes(membershipType) || !membershipType;
               const isLocked = requiresPremium && isFreeUser;
+              const isCompleted = completedStories.includes(story.id);
+              
+              // Tamamlanmış hikayeler için özel renkler
+              const completedCardColors = {
+                a1: 'bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100 border-green-300',
+                a2: 'bg-gradient-to-br from-cyan-100 via-teal-100 to-blue-100 border-cyan-300',
+                b1: 'bg-gradient-to-br from-yellow-100 via-amber-100 to-orange-100 border-yellow-300',
+                b2: 'bg-gradient-to-br from-pink-100 via-rose-100 to-fuchsia-100 border-pink-300',
+              };
+              
+              const cardBgColor = isCompleted 
+                ? (completedCardColors[level?.toLowerCase()] || completedCardColors.a1)
+                : (storyCardBgColors[level?.toLowerCase()] || 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-emerald-100');
               
               return (
                 <div 
                   key={story.id} 
-                  className={`${storyCardBgColors[level?.toLowerCase()] || 'bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-emerald-100'} rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-102 transform flex flex-col border-2 relative ${isLocked ? 'opacity-75' : ''}`}
+                  className={`${cardBgColor} rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-102 transform flex flex-col border-2 relative ${isLocked ? 'opacity-75' : ''} ${isCompleted ? 'ring-2 ring-green-400' : ''}`}
                 >
                   {isLocked && (
                     <div className="absolute inset-0 bg-gray-900 bg-opacity-50 rounded-2xl flex items-center justify-center z-10">
@@ -268,6 +375,14 @@ export default function StoryList() {
                           </button>
                         </Link>
                       </div>
+                    </div>
+                  )}
+                  {isCompleted && (
+                    <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg z-10">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Completed
                     </div>
                   )}
                   <div className="p-6 flex flex-col h-full">
