@@ -37,13 +37,14 @@ export default async function handler(req, res) {
     
     console.log('Translation request - Word:', word, 'Target Language:', targetLanguage, 'isTurkish:', isTurkish);
 
-    // OpenAI API key'ini belirle (öncelik server-side KEY)
-    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-    console.log('Translation API called for word:', word, 'API key exists:', !!apiKey, 'uses NEXT_PUBLIC fallback:', !process.env.OPENAI_API_KEY && !!process.env.NEXT_PUBLIC_OPENAI_API_KEY);
+    // OpenAI API key - sadece server-side key kullan (NEXT_PUBLIC fallback yok, güvenlik için)
+    const apiKey = process.env.OPENAI_API_KEY;
+    console.log('Translation API called for word:', word, 'API key exists:', !!apiKey, 'env:', process.env.NODE_ENV);
 
     // OpenAI API key kontrol et
     if (!apiKey) {
-      console.error('OPENAI_API_KEY not found (server or public)');
+      console.error('OPENAI_API_KEY not found in server environment variables');
+      console.error('Set OPENAI_API_KEY in Vercel Project -> Settings -> Environment Variables (Production). NEXT_PUBLIC_OPENAI_API_KEY is not used.');
       return res.status(500).json({ 
         error: 'Translation service not configured',
         translation: `
