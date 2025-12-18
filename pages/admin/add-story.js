@@ -97,7 +97,7 @@ export default function AddStory() {
     // İçerik değiştiyse kelime sayısını hesapla
     if (name === 'content') {
       const words = value.trim().split(/\s+/).filter(Boolean).length;
-      const readTime = Math.max(1, Math.ceil(words / 200)); // 200 kelime başına 1 dakika
+      const readTime = Math.max(1, Math.ceil(words / 100)); // 100 kelime başına 1 dakika (2 katı)
       
       setStoryData(prev => ({
         ...prev,
