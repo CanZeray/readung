@@ -219,15 +219,16 @@ export default function StoryList() {
       {/* A1 Level */}
       <div className="relative group">
         <Link href="/stories/a1">
-          <div className={`block bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 hover:from-green-100 hover:to-green-200 transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 border border-green-200 hover:border-green-300 cursor-pointer
-            ${level?.toLowerCase() === 'a1' ? 'ring-2 ring-green-400 shadow-lg' : ''}`}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-lg font-bold text-green-800 group-hover:text-green-900">A1</h3>
-              <div className="w-6 h-6 bg-green-200 rounded-full flex items-center justify-center group-hover:bg-green-300 transition-colors">
-                <span className="text-green-700 font-bold text-xs">A1</span>
+          <div className={`relative block bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-xl p-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-emerald-100 hover:border-emerald-300 cursor-pointer overflow-hidden
+            ${level?.toLowerCase() === 'a1' ? 'ring-2 ring-emerald-400 shadow-lg' : ''}`}>
+            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-200 rounded-full -mr-8 -mt-8 opacity-20 group-hover:opacity-30 transition-opacity"></div>
+            <div className="relative z-10 flex items-center justify-between mb-1">
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-emerald-700">A1</h3>
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <span className="text-white font-bold text-xs">A1</span>
               </div>
             </div>
-            <p className="text-green-600 text-xs">Beginner</p>
+            <p className="text-emerald-600 text-[10px] font-semibold">Beginner</p>
           </div>
         </Link>
       </div>
@@ -235,15 +236,16 @@ export default function StoryList() {
       {/* A2 Level */}
       <div className="relative group">
         <Link href="/stories/a2">
-          <div className={`block bg-gradient-to-br from-green-100 to-green-200 rounded-xl p-4 hover:from-green-200 hover:to-green-300 transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 border border-green-300 hover:border-green-400 cursor-pointer
-            ${level?.toLowerCase() === 'a2' ? 'ring-2 ring-green-400 shadow-lg' : ''}`}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-lg font-bold text-green-800 group-hover:text-green-900">A2</h3>
-              <div className="w-6 h-6 bg-green-300 rounded-full flex items-center justify-center group-hover:bg-green-400 transition-colors">
-                <span className="text-green-800 font-bold text-xs">A2</span>
+          <div className={`relative block bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 rounded-xl p-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-teal-100 hover:border-teal-300 cursor-pointer overflow-hidden
+            ${level?.toLowerCase() === 'a2' ? 'ring-2 ring-teal-400 shadow-lg' : ''}`}>
+            <div className="absolute top-0 right-0 w-16 h-16 bg-teal-200 rounded-full -mr-8 -mt-8 opacity-20 group-hover:opacity-30 transition-opacity"></div>
+            <div className="relative z-10 flex items-center justify-between mb-1">
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-teal-700">A2</h3>
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <span className="text-white font-bold text-xs">A2</span>
               </div>
             </div>
-            <p className="text-green-700 text-xs">Elementary</p>
+            <p className="text-teal-600 text-[10px] font-semibold">Elementary</p>
           </div>
         </Link>
       </div>
@@ -251,19 +253,20 @@ export default function StoryList() {
       {/* B1 Level */}
       <div className="relative group">
         <Link href={membershipType === 'premium' ? "/stories/b1" : "/upgrade/premium"}>
-          <div className={`block bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4 hover:from-yellow-100 hover:to-yellow-200 transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 border border-yellow-200 hover:border-yellow-300 cursor-pointer
-            ${level?.toLowerCase() === 'b1' ? 'ring-2 ring-yellow-400 shadow-lg' : ''}`}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-lg font-bold text-yellow-800 group-hover:text-yellow-900">B1</h3>
-              <div className="w-6 h-6 bg-yellow-200 rounded-full flex items-center justify-center group-hover:bg-yellow-300 transition-colors">
-                <span className="text-yellow-800 font-bold text-xs">B1</span>
+          <div className={`relative block bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-xl p-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-amber-100 hover:border-amber-300 cursor-pointer overflow-hidden
+            ${level?.toLowerCase() === 'b1' ? 'ring-2 ring-amber-400 shadow-lg' : ''}`}>
+            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-200 rounded-full -mr-8 -mt-8 opacity-20 group-hover:opacity-30 transition-opacity"></div>
+            <div className="relative z-10 flex items-center justify-between mb-1">
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-amber-700">B1</h3>
+              <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <span className="text-white font-bold text-xs">B1</span>
               </div>
             </div>
-            <p className="text-yellow-600 text-xs">Intermediate</p>
+            <p className="text-amber-600 text-[10px] font-semibold">Intermediate</p>
           </div>
         </Link>
         {(['free', 'basic'].includes(membershipType) || !membershipType) && (
-          <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
+          <span className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-lg animate-pulse z-20">
             ✨ PRO
           </span>
         )}
@@ -272,24 +275,24 @@ export default function StoryList() {
       {/* B2 Level */}
       <div className="relative group">
         <Link href={membershipType === 'premium' ? "/stories/b2" : "/upgrade/premium"}>
-          <div className={`block bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl p-4 hover:from-yellow-200 hover:to-yellow-300 transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 border border-yellow-300 hover:border-yellow-400 cursor-pointer
-            ${level?.toLowerCase() === 'b2' ? 'ring-2 ring-yellow-400 shadow-lg' : ''}`}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-lg font-bold text-yellow-800 group-hover:text-yellow-900">B2</h3>
-              <div className="w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center group-hover:bg-yellow-400 transition-colors">
-                <span className="text-yellow-800 font-bold text-xs">B2</span>
+          <div className={`relative block bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 rounded-xl p-4 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-rose-100 hover:border-rose-300 cursor-pointer overflow-hidden
+            ${level?.toLowerCase() === 'b2' ? 'ring-2 ring-rose-400 shadow-lg' : ''}`}>
+            <div className="absolute top-0 right-0 w-16 h-16 bg-rose-200 rounded-full -mr-8 -mt-8 opacity-20 group-hover:opacity-30 transition-opacity"></div>
+            <div className="relative z-10 flex items-center justify-between mb-1">
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-rose-700">B2</h3>
+              <div className="w-8 h-8 bg-gradient-to-br from-rose-400 to-pink-500 rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <span className="text-white font-bold text-xs">B2</span>
               </div>
             </div>
-            <p className="text-yellow-700 text-xs">Upper Inter.</p>
+            <p className="text-rose-600 text-[10px] font-semibold">Upper Inter.</p>
           </div>
         </Link>
         {(['free', 'basic'].includes(membershipType) || !membershipType) && (
-          <span className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse">
+          <span className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-lg animate-pulse z-20">
             ✨ PRO
           </span>
         )}
       </div>
-
     </div>
   );
 
