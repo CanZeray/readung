@@ -162,12 +162,18 @@ export default async function handler(req, res) {
       current_period_end: subscription.current_period_end
     });
 
-    // Firestore'da cancelledAt alanını güncelle
+    // Firestore'da cancelledAt ve current_period_end alanlarını güncelle
     try {
       await updateDoc(userRef, {
-        cancelledAt: new Date().toISOString()
+        cancelledAt: new Date().toISOString(),
+        subscription: {
+          ...userData.subscription,
+          cancel_at_period_end: true,
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          updatedAt: new Date().toISOString()
+        }
       });
-      console.log('User cancelledAt field updated successfully');
+      console.log('User cancelledAt and current_period_end fields updated successfully');
     } catch (updateError) {
       console.error('Error updating cancelledAt field:', updateError);
     }

@@ -2,5 +2,8 @@
   "version": 2,
   "rewrites": [
     { "source": "/home", "destination": "/" }
-  ]
-} 
+  ],
+  "git": {
+    "deploymentEnabled": false
+  }
+}

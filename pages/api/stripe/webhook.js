@@ -162,7 +162,7 @@ export default async function handler(req, res) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
         const subscription = event.data.object;
-        console.log('Subscription status:', subscription.status, 'ID:', subscription.id);
+        console.log('Subscription status:', subscription.status, 'ID:', subscription.id, 'cancel_at_period_end:', subscription.cancel_at_period_end);
         
         let userIdForUpdate = subscription.metadata?.userId;
         if (!userIdForUpdate && subscription.customer) {
@@ -170,7 +170,54 @@ export default async function handler(req, res) {
         }
         
         if (userIdForUpdate) {
-          await updateUserSubscription(userIdForUpdate, subscription.status, subscription.id);
+          // Eğer cancel_at_period_end true ise, premium kalmalı ama cancelledAt kaydedilmeli
+          if (subscription.cancel_at_period_end && subscription.status === 'active') {
+            const userRef = doc(db, 'users', userIdForUpdate);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists()) {
+              const updateData = {
+                membershipType: 'premium', // Premium kalmalı
+                subscription: {
+                  id: subscription.id,
+                  status: 'active',
+                  cancel_at_period_end: true,
+                  current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+                  updatedAt: new Date().toISOString()
+                },
+                subscriptionId: subscription.id,
+                cancelledAt: userDoc.data().cancelledAt || new Date().toISOString() // İptal tarihi kaydedilmeli
+              };
+              
+              await updateDoc(userRef, updateData);
+              console.log('✅ Subscription set to cancel at period end, premium access maintained until:', new Date(subscription.current_period_end * 1000).toISOString());
+            }
+          } else if (!subscription.cancel_at_period_end && subscription.status === 'active') {
+            // Reactivate durumu: cancel_at_period_end false ve status active
+            const userRef = doc(db, 'users', userIdForUpdate);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists()) {
+              const updateData = {
+                membershipType: 'premium',
+                subscription: {
+                  id: subscription.id,
+                  status: 'active',
+                  cancel_at_period_end: false,
+                  current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+                  updatedAt: new Date().toISOString()
+                },
+                subscriptionId: subscription.id,
+                cancelledAt: null // İptal tarihini temizle
+              };
+              
+              await updateDoc(userRef, updateData);
+              console.log('✅ Subscription reactivated, premium access continues');
+            }
+          } else {
+            // Normal subscription update
+            await updateUserSubscription(userIdForUpdate, subscription.status, subscription.id);
+          }
         } else {
           console.error('❌ Could not find userId for subscription:', subscription.id);
         }

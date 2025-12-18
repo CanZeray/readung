@@ -18,6 +18,7 @@ export default function Profile() {
   const [cancellingSubscription, setCancellingSubscription] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [testModeData, setTestModeData] = useState(null);
   const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
@@ -50,17 +51,38 @@ export default function Profile() {
         });
         setMembershipType(userData.membershipType || 'basic');
 
-        // İptal durumunu kontrol et - Manual upgrade edilmiş kullanıcılar için özel kontrol
-        if (userData.cancelledAt && userData.membershipType === 'premium') {
-          // Premium kullanıcıların subscription status'unu kontrol et
+        // İptal durumunu kontrol et - subscription.current_period_end kullan
+        if (userData.subscription?.cancel_at_period_end && userData.membershipType === 'premium') {
+          setSubscriptionCancelled(true);
+          
+          // current_period_end varsa onu kullan, yoksa cancelledAt + 30 gün
+          if (userData.subscription?.current_period_end) {
+            const endDate = new Date(userData.subscription.current_period_end);
+            setCancelDate(endDate);
+            
+            const today = new Date();
+            const timeDiff = endDate.getTime() - today.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            setDaysRemaining(Math.max(0, daysDiff));
+          } else if (userData.cancelledAt) {
+            const cancelledDate = new Date(userData.cancelledAt);
+            const endDate = new Date(cancelledDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 gün sonra
+            setCancelDate(endDate);
+            
+            const today = new Date();
+            const timeDiff = endDate.getTime() - today.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            setDaysRemaining(Math.max(0, daysDiff));
+          }
+        } else if (userData.cancelledAt && userData.membershipType === 'premium') {
+          // Eski format için fallback
           const hasActiveSubscription = userData.subscription?.status === 'active';
           const hasSubscriptionId = userData.subscriptionId && !userData.subscriptionId.startsWith('sub_test_');
           
-          // Test mode manual upgrade veya active subscription varsa cancelled durumunu gösterme
           if (!hasActiveSubscription && !userData.subscriptionId?.startsWith('sub_test_')) {
             setSubscriptionCancelled(true);
             const cancelledDate = new Date(userData.cancelledAt);
-            const endDate = new Date(cancelledDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 gün sonra
+            const endDate = new Date(cancelledDate.getTime() + (30 * 24 * 60 * 60 * 1000));
             setCancelDate(endDate);
             
             const today = new Date();
@@ -98,6 +120,26 @@ export default function Profile() {
   useEffect(() => {
     fetchUserData();
   }, [currentUser]);
+
+  // Countdown timer - gerçek zamanlı güncelleme
+  useEffect(() => {
+    if (subscriptionCancelled && cancelDate) {
+      const updateCountdown = () => {
+        const today = new Date();
+        const timeDiff = cancelDate.getTime() - today.getTime();
+        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        setDaysRemaining(Math.max(0, daysDiff));
+      };
+
+      // İlk güncelleme
+      updateCountdown();
+
+      // Her saat başı güncelle
+      const interval = setInterval(updateCountdown, 3600000); // 1 saat
+
+      return () => clearInterval(interval);
+    }
+  }, [subscriptionCancelled, cancelDate]);
 
   const handleLogout = async () => {
     try {
@@ -148,10 +190,6 @@ export default function Profile() {
         setShowSuccessModal(true);
         // Test mode bilgisini saklayalım
         setTestModeData(data.isTestMode ? data : null);
-        // Modal kapandıktan sonra sayfayı yenile
-        setTimeout(() => {
-          router.reload();
-        }, 3000);
       } else {
         throw new Error(data.error);
       }
@@ -170,7 +208,49 @@ export default function Profile() {
         return;
       }
 
-      // Dynamic API URL - current window location kullan
+      // Kullanıcının aktif subscription'ı var mı kontrol et
+      const userRef = doc(db, 'users', currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const subscriptionId = userData.subscriptionId || userData.subscription?.id;
+        const cancelAtPeriodEnd = userData.subscription?.cancel_at_period_end;
+        
+        // Eğer aktif subscription var ve cancel_at_period_end: true ise, reactivate et
+        if (subscriptionId && cancelAtPeriodEnd && userData.membershipType === 'premium') {
+          try {
+            const token = await currentUser.getIdToken();
+            const reactivateUrl = `${window.location.origin}/api/reactivate-subscription`;
+            
+            const response = await fetch(reactivateUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || errorData.error || 'Reactivation failed');
+            }
+
+            const data = await response.json();
+            console.log('Subscription reactivated:', data);
+            
+            // Başarılı - modal göster
+            setShowReactivateModal(true);
+            return;
+          } catch (reactivateError) {
+            console.error('Reactivate error:', reactivateError);
+            // Reactivate başarısız olursa yeni checkout session oluştur
+            console.log('Reactivate failed, creating new checkout session...');
+          }
+        }
+      }
+
+      // Yeni checkout session oluştur (subscription yoksa veya reactivate başarısız olduysa)
       const apiUrl = `${window.location.origin}/api/create-checkout-session`;
 
       const response = await fetch(apiUrl, {
@@ -188,7 +268,7 @@ export default function Profile() {
 
       // Response'u kontrol et
       if (!response.ok) {
-        let errorMessage = 'Ödeme sayfası oluşturulamadı';
+        let errorMessage = 'Payment page could not be created';
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
@@ -204,11 +284,11 @@ export default function Profile() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        throw new Error('Ödeme URL\'i bulunamadı');
+        throw new Error('Payment URL not found');
       }
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Ödeme işlemi başlatılırken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+      alert('An error occurred while processing your request. Please try again later.');
     }
   };
 
@@ -430,20 +510,36 @@ export default function Profile() {
                 
                 {membershipType === 'premium' && subscriptionCancelled && (
                   <div className="mt-4 space-y-3">
-                    {/* İptal durumu bilgisi */}
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    {/* İptal durumu bilgisi - Countdown ile */}
+                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-xl p-5 shadow-lg">
                       <div className="flex items-start">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-orange-600 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                          <p className="text-sm font-medium text-orange-800">Subscription Cancelled</p>
-                          <p className="text-sm text-orange-700 mt-1">
-                            You have <span className="font-semibold">{daysRemaining} days</span> of premium access remaining
-                          </p>
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="ml-4 flex-1">
+                          <p className="text-base font-bold text-orange-900 mb-2">Subscription Cancelled</p>
+                          
+                          {/* Countdown */}
+                          <div className="bg-white rounded-lg p-3 mb-2 border border-orange-200">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-600">Premium Access Remaining:</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl font-bold text-orange-600">{daysRemaining}</span>
+                                <span className="text-sm text-gray-600">{daysRemaining === 1 ? 'day' : 'days'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
                           {cancelDate && (
-                            <p className="text-xs text-orange-600 mt-1">
-                              Premium expires on {cancelDate.toLocaleDateString('tr-TR')}
+                            <p className="text-xs text-orange-700 mt-2 flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              Premium expires on <span className="font-semibold">{cancelDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                             </p>
                           )}
                         </div>
@@ -654,14 +750,50 @@ export default function Profile() {
                 </button>
               </div>
 
-              {/* Auto close indicator */}
-              <div className="mt-6 text-center">
-                <p className="text-xs text-gray-400">
-                  Automatically refreshing in 3 seconds...
+            </div>
+          </div>
+        )}
+
+        {/* Reactivate Success Modal */}
+        {showReactivateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative transform transition-all duration-300 scale-100">
+              {/* Success Icon */}
+              <div className="flex items-center justify-center w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              
+              {/* Success Content */}
+              <div className="text-center mb-8">
+                <h3 className="text-3xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Subscription Reactivated! 🎉
+                </h3>
+                <p className="text-gray-700 leading-relaxed text-lg mb-4">
+                  Your premium access will continue seamlessly.
                 </p>
-                <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                  <div className="bg-green-500 h-1 rounded-full animate-pulse" style={{width: '100%', animation: 'shrink 3s linear forwards'}}></div>
+                <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                  <p className="text-sm text-green-800">
+                    <span className="font-semibold">✨ Great news!</span> Your subscription is now active again. You'll continue to enjoy all premium features.
+                  </p>
                 </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    setShowReactivateModal(false);
+                    window.location.reload();
+                  }}
+                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+                >
+                  <span>Continue</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
