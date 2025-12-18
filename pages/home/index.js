@@ -7,6 +7,7 @@ import { db } from '../../lib/firebase';
 import { collection, getDocs, query, where, limit, doc, getDoc, addDoc, updateDoc } from 'firebase/firestore';
 import Navbar from '../../components/Navbar';
 
+// Vercel deployment verification
 export default function Home() {
   const { currentUser } = useAuth();
   const router = useRouter();
