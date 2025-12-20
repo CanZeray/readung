@@ -450,6 +450,7 @@ export default function ReadStory() {
   // Kelime kaydetme limiti için state (translate limiti kaldırıldı)
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showTranslatePrompt, setShowTranslatePrompt] = useState(false);
 
   // Tek/çift tıklama çakışmasını önlemek için timer
   let clickTimer = null;
@@ -1136,7 +1137,7 @@ Grammatical role: Not available
 
       <Navbar />
 
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-2 sm:px-4 py-8">
         <button 
           onClick={handleGoBack}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 mb-2 group text-sm"
@@ -1147,36 +1148,11 @@ Grammatical role: Not available
           <span className="font-medium">Back to Stories</span>
         </button>
 
-        <div className="card">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold">{story.title}</h1>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 font-medium">Translation:</span>
-              <div className="flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setTranslationLanguage('english')}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                    translationLanguage === 'english'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  English
-                </button>
-                <button
-                  onClick={() => setTranslationLanguage('turkish')}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                    translationLanguage === 'turkish'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Türkçe
-                </button>
-              </div>
-            </div>
+        <div className="card p-4 sm:p-6">
+          <div className="mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold break-words">{story.title}</h1>
           </div>
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex flex-wrap items-center gap-2 mb-6">
             <span className="px-2 py-1 bg-primary text-white text-sm rounded-md shadow-md" style={{boxShadow: '0px 2px 8px rgba(0,0,0,0.08)'}}>
               Level {story.level.toUpperCase()}
             </span>
@@ -1193,7 +1169,7 @@ Grammatical role: Not available
             </span>
           </div>
           
-          <div className="mb-4 p-4 rounded border border-[#cce7ff] bg-gradient-to-r from-blue-50 to-blue-50/70 flex items-start">
+          <div className="mb-4 p-3 sm:p-4 rounded border border-[#cce7ff] bg-gradient-to-r from-blue-50 to-blue-50/70 flex items-start">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
@@ -1213,19 +1189,25 @@ Grammatical role: Not available
           
           <div 
             ref={contentRef}
-            className="story-content mb-6 leading-relaxed text-lg"
-            style={{ position: 'relative' }}
+            className="story-content mb-6 leading-relaxed text-base sm:text-lg"
+            style={{ 
+              position: 'relative',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word'
+            }}
           >
             {story.content.split('\n\n').map((paragraph, idx) => (
-              <p key={idx} className="mb-6">
+              <p key={idx} className="mb-6" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
                 {(paragraph.match(/\p{L}+|\d+|[^\p{L}\d\s]+|\s+/gu) || []).map((word, widx) => {
                   // Sadece harf içeren kelimeler (Almanca karakterler dahil), sayı içerenler hariç
                   if (/^\p{L}+$/u.test(word)) {
                     return (
                       <span
                         key={widx}
-                        className="hover:bg-yellow-200 transition rounded cursor-pointer px-1 inline-block word-hover"
+                        className="hover:bg-yellow-200 transition rounded cursor-pointer px-1 inline word-hover"
                         onClick={(e) => handleWordClick(e, word)}
+                        style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
                       >
                         {word}
                       </span>
@@ -1301,7 +1283,7 @@ Grammatical role: Not available
                 ? 'bg-gray-500 text-white cursor-not-allowed'
                 : translatedWords.has(selectedWordForTranslation.toLowerCase())
                 ? 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
-                : 'bg-gray-400 text-gray-200 cursor-not-allowed hover:bg-gray-400'
+                : 'bg-gray-400 text-gray-200 cursor-pointer hover:bg-gray-500'
             }`}
             style={{
               fontSize: '14px',
@@ -1322,14 +1304,14 @@ Grammatical role: Not available
               
               // Önce translate edilmiş mi kontrol et
               if (!translatedWords.has(selectedWordForTranslation.toLowerCase())) {
-                alert('Please translate the word first before saving it!');
+                setShowTranslatePrompt(true);
+                setShowTranslateButton(false);
                 return;
               }
               
               handleDirectSave(selectedWordForTranslation);
               setShowTranslateButton(false);
             }}
-            disabled={!translatedWords.has(selectedWordForTranslation.toLowerCase()) || savedWords.has(selectedWordForTranslation.toLowerCase())}
           >
             {savedWords.has(selectedWordForTranslation.toLowerCase()) ? 'Already Saved' : 'Save'}
           </button>
@@ -1377,6 +1359,30 @@ Grammatical role: Not available
               {(() => {
                 const isTr = translationLanguage === 'turkish';
                 const na = isTr ? 'Mevcut değil' : 'Not available';
+                const na_applicable = 'Not applicable';
+
+                // Word type
+                let wordType = '';
+                const wordTypeMatch = translatedWord.match(/Word type:\s*([^\n]*)/i);
+                if (wordTypeMatch && wordTypeMatch[1]) {
+                  wordType = wordTypeMatch[1].trim().toLowerCase();
+                }
+
+                // Word type renkleri
+                const getWordTypeColor = (type) => {
+                  const colors = {
+                    noun: { bg: '#3B82F6', text: '#FFFFFF' }, // Mavi
+                    verb: { bg: '#EF4444', text: '#FFFFFF' }, // Kırmızı
+                    adjective: { bg: '#10B981', text: '#FFFFFF' }, // Yeşil
+                    adverb: { bg: '#F59E0B', text: '#FFFFFF' }, // Turuncu
+                    pronoun: { bg: '#8B5CF6', text: '#FFFFFF' }, // Mor
+                    preposition: { bg: '#6B7280', text: '#FFFFFF' }, // Gri
+                    conjunction: { bg: '#EC4899', text: '#FFFFFF' }, // Pembe
+                    article: { bg: '#14B8A6', text: '#FFFFFF' }, // Cyan
+                    other: { bg: '#9CA3AF', text: '#FFFFFF' } // Açık gri
+                  };
+                  return colors[type] || colors.other;
+                };
 
                 // Meaning için esnek ve fallback (TR başlıkları dahil)
                 let meaning = '';
@@ -1391,83 +1397,154 @@ Grammatical role: Not available
 
                 // Explanation (TR başlıkları dahil)
                 let explanation = '';
-                const explanationMatch = translatedWord.match(/Explanation:\s*([\s\S]*?)(Example sentence:|Grammatical role:|Grammatical function:|Grammar:|Function:|Role:|$)/i)
-                  || translatedWord.match(/Açıklama:\s*([\s\S]*?)(Örnek cümle:|Gramer rolü:|Example sentence:|Grammatical role:|$)/i);
+                const explanationMatch = translatedWord.match(/Explanation:\s*([\s\S]*?)(Grammatical function:|Tense:|Conjugation|Example sentence:|Grammatical role:|$)/i)
+                  || translatedWord.match(/Açıklama:\s*([\s\S]*?)(Gramer fonksiyonu:|Zaman:|Çekim:|Örnek cümle:|Gramer rolü:|$)/i);
                 explanation = explanationMatch && explanationMatch[1]?.trim() ? explanationMatch[1].trim() : na;
 
-                // Example sentence (TR başlıkları dahil)
-                let example = '';
-                const exampleMatch = translatedWord.match(/Example sentence:\s*([\s\S]*?)(Grammatical role:|Grammatical function:|Grammar:|Function:|Role:|Meaning:|Explanation:|$)/i)
-                  || translatedWord.match(/Example:\s*([\s\S]*?)(Grammatical role:|Grammatical function:|Grammar:|Function:|Role:|Meaning:|Explanation:|$)/i)
-                  || translatedWord.match(/Örnek cümle:\s*([\s\S]*?)(Gramer rolü:|Meaning:|Explanation:|Grammatical role:|$)/i);
+                // Grammatical function
+                let grammaticalFunction = '';
+                const grammaticalFunctionMatch = translatedWord.match(/Grammatical function:\s*([^\n]*)/i)
+                  || translatedWord.match(/Gramer fonksiyonu:\s*([^\n]*)/i);
+                if (grammaticalFunctionMatch && grammaticalFunctionMatch[1]) {
+                  grammaticalFunction = grammaticalFunctionMatch[1].trim();
+                  if (grammaticalFunction.toLowerCase() === 'not applicable') grammaticalFunction = na_applicable;
+                }
 
-                if (exampleMatch && exampleMatch[1]?.trim()) {
+                // Tense
+                let tense = '';
+                const tenseMatch = translatedWord.match(/Tense:\s*([^\n]*)/i)
+                  || translatedWord.match(/Zaman:\s*([^\n]*)/i);
+                if (tenseMatch && tenseMatch[1]) {
+                  tense = tenseMatch[1].trim();
+                  if (tense.toLowerCase() === 'not applicable') tense = na_applicable;
+                }
+
+                // Conjugation/Inflection
+                let conjugation = '';
+                const conjugationMatch = translatedWord.match(/Conjugation\/Inflection:\s*([^\n]*)/i)
+                  || translatedWord.match(/Conjugation:\s*([^\n]*)/i)
+                  || translatedWord.match(/Inflection:\s*([^\n]*)/i)
+                  || translatedWord.match(/Çekim:\s*([^\n]*)/i);
+                if (conjugationMatch && conjugationMatch[1]) {
+                  conjugation = conjugationMatch[1].trim();
+                  if (conjugation.toLowerCase() === 'not applicable') conjugation = na_applicable;
+                }
+
+                // Example sentence
+                let example = '';
+                const exampleMatch = translatedWord.match(/Example sentence:\s*([^\n]*)/i)
+                  || translatedWord.match(/Örnek cümle:\s*([^\n]*)/i);
+                if (exampleMatch && exampleMatch[1]) {
                   example = exampleMatch[1].trim();
                 } else {
-                  if (explanationMatch && explanationMatch[1]) {
-                    const quoteMatch = explanationMatch[1].match(/"([^"]+?)"/g);
-                    if (quoteMatch) {
-                      example = quoteMatch[0].replace(/"/g, '');
-                    } else {
-                      example = na;
+                  example = na;
+                }
+
+                // Example translation
+                let exampleTranslation = '';
+                const exampleTranslationMatch = translatedWord.match(/Example translation:\s*([^\n]*)/i)
+                  || translatedWord.match(/Örnek çeviri:\s*([^\n]*)/i);
+                if (exampleTranslationMatch && exampleTranslationMatch[1]) {
+                  exampleTranslation = exampleTranslationMatch[1].trim();
+                } else {
+                  exampleTranslation = na;
+                }
+
+                // Fallback: Eski format için grammatical role
+                let grammar = '';
+                if (!grammaticalFunction || grammaticalFunction === na_applicable) {
+                  const grammarMatch = translatedWord.match(/Grammatical role:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Grammatical function:|Grammar:|Function:|Role:|$)/i)
+                    || translatedWord.match(/Gramer rolü:\s*([\s\S]*?)(Anlam:|Açıklama:|Örnek cümle:|Meaning:|Explanation:|Example sentence:|$)/i);
+                  if (grammarMatch && grammarMatch[1]?.trim()) {
+                    grammar = grammarMatch[1].trim();
+                    if (grammar.toLowerCase().includes('see explanation above') || grammar.length < 8) {
+                      grammar = '';
                     }
-                  } else {
-                    example = na;
                   }
                 }
 
-                // Grammatical role / Gramer rolü
-                let grammar = '';
-                const grammarMatch = translatedWord.match(/Grammatical role:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Grammatical function:|Grammar:|Function:|Role:|$)/i)
-                  || translatedWord.match(/Grammatical function:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Grammar:|Function:|Role:|$)/i)
-                  || translatedWord.match(/Grammar:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Function:|Role:|$)/i)
-                  || translatedWord.match(/Function:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|Role:|$)/i)
-                  || translatedWord.match(/Role:\s*([\s\S]*?)(Meaning:|Explanation:|Example sentence:|$)/i)
-                  || translatedWord.match(/Gramer rolü:\s*([\s\S]*?)(Anlam:|Açıklama:|Örnek cümle:|Meaning:|Explanation:|Example sentence:|$)/i);
-                if (grammarMatch && grammarMatch[1]?.trim()) {
-                  grammar = grammarMatch[1].trim();
-                  if (
-                    grammar.toLowerCase().includes('see explanation above') ||
-                    grammar.length < 8
-                  ) {
-                    grammar = '';
-                  }
-                }
-                // Fallback: Explanation içinde gramatik bilgi ara
-                if (!grammar) {
-                  const lowerExp = explanation.toLowerCase();
-                  if (lowerExp.includes('adverb')) grammar = isTr ? 'Zarf (açıktan yakalandı)' : 'Adverb (detected from explanation)';
-                  else if (lowerExp.includes('verb')) grammar = isTr ? 'Fiil (açıktan yakalandı)' : 'Verb (detected from explanation)';
-                  else if (lowerExp.includes('noun')) grammar = isTr ? 'İsim (açıktan yakalandı)' : 'Noun (detected from explanation)';
-                  else grammar = na;
-                }
+                const wordTypeColor = wordType ? getWordTypeColor(wordType) : null;
 
                 return (
                   <>
-                      <div style={{fontWeight: 'bold', color: '#374151', fontSize: '1.1rem', marginBottom: 6}}>
-                        Meaning
+                    {/* Word Type Badge */}
+                    {wordType && wordTypeColor && (
+                      <div style={{ marginBottom: 12 }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '4px 12px',
+                          borderRadius: '12px',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          backgroundColor: wordTypeColor.bg,
+                          color: wordTypeColor.text
+                        }}>
+                          {wordType.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Meaning */}
+                    <div style={{fontWeight: 'bold', color: '#374151', fontSize: '1.1rem', marginBottom: 6}}>
+                      Meaning
                       <div style={{fontWeight: 'normal', color: '#6b7280', fontSize: '1rem', marginTop: 2}}>
                         {meaning}
                       </div>
                     </div>
-                      <div style={{borderTop: '1px solid #f3f4f6', paddingTop: 8, marginTop: 8, marginBottom: 6}}>
-                        <span style={{fontWeight: 'bold', color: '#374151'}}>Explanation</span>
+
+                    {/* Explanation */}
+                    <div style={{borderTop: '1px solid #f3f4f6', paddingTop: 8, marginTop: 8, marginBottom: 6}}>
+                      <span style={{fontWeight: 'bold', color: '#374151'}}>Explanation</span>
                       <div style={{color: '#6b7280', fontSize: '1rem', marginTop: 2}}>
                         {explanation}
                       </div>
                     </div>
-                      <div style={{borderTop: '1px solid #f3f4f6', paddingTop: 8, marginTop: 8}}>
-                        <span style={{fontWeight: 'bold', color: '#374151'}}>Example sentence</span>
-                      <div style={{color: '#3B82F6', fontStyle: 'italic', fontSize: '1rem', marginTop: 2}}>
-                        {example}
-                      </div>
-                      </div>
+
+                    {/* Grammatical Function */}
+                    {(grammaticalFunction || grammar) && (
                       <div style={{borderTop: '1px solid #f3f4f6', paddingTop: 8, marginTop: 8, marginBottom: 6}}>
-                        <span style={{fontWeight: 'bold', color: '#374151'}}>Grammatical role</span>
-                      <div style={{color: '#6b7280', fontSize: '1rem', marginTop: 2}}>
-                        {grammar}
+                        <span style={{fontWeight: 'bold', color: '#374151'}}>Grammatical function</span>
+                        <div style={{color: '#6b7280', fontSize: '1rem', marginTop: 2}}>
+                          {grammaticalFunction || grammar || na}
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Tense */}
+                    {tense && tense !== na_applicable && (
+                      <div style={{borderTop: '1px solid #f3f4f6', paddingTop: 8, marginTop: 8, marginBottom: 6}}>
+                        <span style={{fontWeight: 'bold', color: '#374151'}}>Tense</span>
+                        <div style={{color: '#6b7280', fontSize: '1rem', marginTop: 2}}>
+                          {tense}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Conjugation/Inflection */}
+                    {conjugation && conjugation !== na_applicable && (
+                      <div style={{borderTop: '1px solid #f3f4f6', paddingTop: 8, marginTop: 8, marginBottom: 6}}>
+                        <span style={{fontWeight: 'bold', color: '#374151'}}>Conjugation/Inflection</span>
+                        <div style={{color: '#6b7280', fontSize: '1rem', marginTop: 2, fontFamily: 'monospace'}}>
+                          {conjugation}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Example Sentence */}
+                    {example && example !== na && (
+                      <div style={{borderTop: '1px solid #f3f4f6', paddingTop: 8, marginTop: 8, marginBottom: 6}}>
+                        <span style={{fontWeight: 'bold', color: '#374151'}}>Example sentence</span>
+                        <div style={{color: '#3B82F6', fontStyle: 'italic', fontSize: '1rem', marginTop: 2}}>
+                          {example}
+                        </div>
+                        {/* Example Translation */}
+                        {exampleTranslation && exampleTranslation !== na && (
+                          <div style={{color: '#6B7280', fontSize: '0.9rem', marginTop: 4, fontStyle: 'normal'}}>
+                            "{exampleTranslation}"
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </>
                 );
               })()}
@@ -1523,6 +1600,43 @@ Grammatical role: Not available
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Log In
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Translate Required Prompt Modal */}
+      {showTranslatePrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md mx-auto p-6 w-full shadow-2xl transform transition-all">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
+                <svg className="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Translation Required</h3>
+              <p className="text-gray-600 mb-6">
+                You need to translate the word first before saving it to your vocabulary.
+              </p>
+              <div className="flex justify-center gap-3">
+                <button 
+                  onClick={() => setShowTranslatePrompt(false)} 
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowTranslatePrompt(false);
+                    setShowTranslateButton(true);
+                    handleTranslate();
+                  }} 
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Translate Now
                 </button>
               </div>
             </div>

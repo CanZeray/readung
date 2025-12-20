@@ -30,7 +30,26 @@ export default function Register() {
       router.push('/home');
     } catch (error) {
       console.error('Registration error:', error);
-      setError('Failed to create an account. ' + error.message);
+      
+      // Firebase hata kodlarına göre kullanıcı dostu mesajlar
+      let errorMessage = 'Failed to create an account. Please try again.';
+      
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email address is already registered. Please sign in instead or use a different email.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak. Please use at least 6 characters.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Registration is currently disabled. Please contact support.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (error.message) {
+        // Diğer hatalar için genel mesaj
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -44,7 +63,21 @@ export default function Register() {
       router.push('/home');
     } catch (error) {
       console.error('Google sign up error:', error);
-      setError('Failed to sign up with Google. ' + error.message);
+      
+      // Firebase hata kodlarına göre kullanıcı dostu mesajlar
+      let errorMessage = 'Failed to sign up with Google. Please try again.';
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign up was cancelled. Please try again if you want to continue.';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup was blocked by your browser. Please allow popups and try again.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setGoogleLoading(false);
     }
@@ -85,20 +118,20 @@ export default function Register() {
           <div className="mt-6 bg-white/80 backdrop-blur-sm py-8 px-4 shadow-xl border border-white/20 sm:rounded-2xl sm:px-10">
             <div className="mb-6">
               <div className="flex space-x-4">
-                <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-4 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="bg-gray-400 w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">Login</h3>
-                  <p className="text-gray-500 text-sm mb-3">Sign in to your account</p>
-                  <Link href="/auth/login">
+                <Link href="/auth/login">
+                  <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-4 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                    <div className="bg-gray-400 w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-600 mb-2">Login</h3>
+                    <p className="text-gray-500 text-sm mb-3">Sign in to your account</p>
                     <button className="px-4 py-1 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 rounded-full text-sm hover:from-purple-200 hover:to-pink-300 hover:text-purple-700 transition-all duration-200 transform hover:scale-105">
                       Sign In
                     </button>
-                  </Link>
-                </div>
+                  </div>
+                </Link>
                 <div className="flex-1 bg-gradient-to-br from-purple-50 to-pink-100 border-2 border-purple-200 rounded-xl p-4 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="bg-purple-500 w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

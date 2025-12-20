@@ -90,21 +90,39 @@ Veri yoksa, o bölümün altına "Mevcut değil" yaz — bölümleri asla atlama
 
 Her bölümü açık, kısa ve tutarlı tut. UNUTMA: HER ŞEY TÜRKÇE OLMALI!
 ` : `
-You are a professional German-to-English translator.
+You are a professional German-to-English translator and grammar expert.
 
-When given a German word and its surrounding sentence, return:
+When given a German word and its surrounding sentence, return ALL of the following sections in this EXACT format:
 
+Word type: (ONE word only: noun, verb, adjective, adverb, pronoun, preposition, conjunction, article, or other)
 Meaning: (the most accurate meaning in 1-2 words)
 Explanation: (a short explanation, maximum 2 sentences)
-Example sentence: (ALWAYS provide an ENGLISH sentence using the meaning of the word, even if you have to MAKE ONE UP)
-Grammatical role: (ALWAYS give a full, specific, context-based grammatical explanation. NEVER say "see explanation above", NEVER just write "noun" or "verb". Always explain the grammatical function in the sentence, even if you have to invent details. If you skip the grammatical role section, repeat the header and write 'Not available'. Never merge with explanation. Always use the header.)
+Grammatical function: (the grammatical function in the sentence: subject, object, predicate, attribute, adverbial, etc. If not applicable, write "Not applicable")
+Tense: (ONLY for verbs: present, past, perfect, pluperfect, future, conditional, etc. For non-verbs, write "Not applicable")
+Conjugation/Inflection: (explain the word's conjugation or inflection. Examples: "gehen → past participle: gegangen", "ihnen + dem → ihnen", "der → dative masculine: dem". If not applicable, write "Not applicable")
+Example sentence: (ALWAYS provide a SIMPLE German sentence using the word, even if you have to MAKE ONE UP)
+Example translation: (the English translation of the example sentence above)
 
-Always output ALL of these sections, no matter what.
-If no data is available, write "Not available" under that section — never skip or merge sections.
+CRITICAL RULES:
+1. ALWAYS output ALL sections in the exact order above
+2. Word type must be exactly ONE word from the list: noun, verb, adjective, adverb, pronoun, preposition, conjunction, article, other
+3. For Tense: only fill if it's a verb, otherwise write "Not applicable"
+4. For Conjugation/Inflection: provide specific examples like "gehen → v3: gegangen" or "der → dative: dem"
+5. Example sentence must be SIMPLE and in German
+6. Example translation must be the English translation of the example sentence
+7. If any section has no data, write "Not available" (except Tense and Conjugation which use "Not applicable" when not relevant)
+8. NEVER skip sections or merge them together
+9. Keep each section clear, short, and consistent
 
-If the surrounding sentence is missing or does not help, INVENT a simple context yourself to create the example sentence.
-
-Keep each section clear, short, and consistent.
+Format example:
+Word type: verb
+Meaning: to go
+Explanation: A common verb meaning to move from one place to another.
+Grammatical function: predicate
+Tense: present
+Conjugation/Inflection: gehen → past participle: gegangen, 3rd person singular present: geht
+Example sentence: Ich gehe zur Schule.
+Example translation: I go to school.
 `
           },
           {
@@ -112,8 +130,8 @@ Keep each section clear, short, and consistent.
             content: `Word: "${word}"\nSentence: "${context || ''}"`
           }
         ],
-        temperature: 0.3,
-        max_tokens: 120
+        temperature: 0.4,
+        max_tokens: 250
       })
     });
 

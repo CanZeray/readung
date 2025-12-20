@@ -53,7 +53,19 @@ export default function Login() {
       router.push('/home');
     } catch (err) {
       console.error('Google sign-in error:', err);
-      setError('Could not sign in with Google. Please try again');
+      
+      // Firebase hata kodlarına göre kullanıcı dostu mesajlar
+      let errorMessage = 'Could not sign in with Google. Please try again.';
+      
+      if (err.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign in was cancelled. Please try again if you want to continue.';
+      } else if (err.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup was blocked by your browser. Please allow popups and try again.';
+      } else if (err.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -105,20 +117,20 @@ export default function Login() {
                   <p className="text-blue-600 text-sm mb-3">Sign in to your account</p>
                   <div className="inline-block w-3 h-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full animate-pulse"></div>
                 </div>
-                <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-4 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="bg-gray-400 w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">Sign Up</h3>
-                  <p className="text-gray-500 text-sm mb-3">Create new account</p>
-                  <Link href="/auth/register">
+                <Link href="/auth/register">
+                  <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-4 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+                    <div className="bg-gray-400 w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-600 mb-2">Sign Up</h3>
+                    <p className="text-gray-500 text-sm mb-3">Create new account</p>
                     <button className="px-4 py-1 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 rounded-full text-sm hover:from-blue-200 hover:to-blue-300 hover:text-blue-700 transition-all duration-200 transform hover:scale-105">
                       Sign Up
                     </button>
-                  </Link>
-                </div>
+                  </div>
+                </Link>
               </div>
             </div>
 
