@@ -771,15 +771,13 @@ export default function ReadStory() {
       
       setShowTranslation(true);
       
-      // Çeviri veritabanında arama yap
+      // Çeviri veritabanında arama yap - önce mevcut çeviriyi kontrol et
       const translationsRef = collection(db, "translations");
       const q = query(translationsRef, where("original", "==", selectedWordForTranslation));
       const querySnapshot = await getDocs(q);
       
-      // Çeviri veritabanında var mı kontrol et
-      // NOT: Dil seçimi değiştiğinde yeni çeviri yapılması için mevcut çeviriyi kullanmıyoruz
-      // Her zaman seçilen dile göre yeni çeviri yapıyoruz
-      const useExistingTranslation = false; // Dil seçimi nedeniyle her zaman yeni çeviri yap
+      // Çeviri veritabanında var mı kontrol et - varsa kullan, yoksa API'ye istek at
+      const useExistingTranslation = !querySnapshot.empty;
       
       if (useExistingTranslation && !querySnapshot.empty) {
         const existingTranslation = querySnapshot.docs[0].data();
