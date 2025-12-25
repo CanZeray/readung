@@ -371,32 +371,13 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="bg-white shadow-sm rounded-b-lg p-6 mb-8">
-          <div className="bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-100 mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-3xl font-bold mr-4 shadow-sm">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <div className="flex flex-col">
-                  <h2 className="text-xl font-medium leading-tight">{user?.name || 'User'}</h2>
-                  <p className="text-sm text-gray-600 leading-tight mt-1">{user?.email}</p>
-                </div>
-              </div>
-              <button 
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                onClick={handleEditProfile}
-              >
-                Edit Profile
-              </button>
-            </div>
-          </div>
-
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4">Current Membership</h3>
-            <div className="p-4 border rounded-lg">
-              <p className="font-medium">{membershipType === 'premium' ? 'Premium' : 'Basic'}</p>
-              <p className="text-sm text-gray-600">
+        <div className="bg-white shadow-sm rounded-b-lg p-4 md:p-6 mb-8">
+          {/* Current Plan - Üste taşındı */}
+          <div className="mb-6">
+            <h3 className="text-base md:text-lg font-medium mb-3">Current Plan</h3>
+            <div className="p-3 md:p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+              <p className="font-semibold text-base md:text-lg">{membershipType === 'premium' ? 'Premium' : 'Basic'}</p>
+              <p className="text-xs md:text-sm text-gray-600 mt-1">
                 {membershipType === 'premium' 
                   ? 'Access to all levels and unlimited features' 
                   : 'Access to A1-A2 levels with daily limits'
@@ -405,157 +386,109 @@ export default function Profile() {
             </div>
           </div>
 
+          <div className="bg-gray-50 rounded-lg p-3 md:p-4 shadow-sm border border-gray-100 mb-6">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center min-w-0 flex-1">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xl md:text-3xl font-bold mr-3 md:mr-4 shadow-sm flex-shrink-0">
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <h2 className="text-base md:text-xl font-medium leading-tight truncate">{user?.name || 'User'}</h2>
+                  <p className="text-xs md:text-sm text-gray-600 leading-tight mt-0.5 md:mt-1 truncate">{user?.email}</p>
+                </div>
+              </div>
+              <button 
+                className="px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex-shrink-0"
+                onClick={handleEditProfile}
+              >
+                Edit Profile
+              </button>
+            </div>
+          </div>
+
           <div className="mb-6">
-            <h3 className="text-xl font-medium mb-4">Membership Plans</h3>
+            <h3 className="text-base md:text-xl font-medium mb-3 md:mb-4">Membership Plans</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-6">
               {/* Basic Plan */}
-              <div className={`border-2 relative transition-all duration-300 ease-in-out rounded-lg p-5 bg-white
+              <div className={`border-2 relative transition-all duration-300 ease-in-out rounded-lg p-3 md:p-5 bg-white
                 ${membershipType === 'basic' || !membershipType ? 'border-blue-500 shadow-lg' : 'border-gray-200 opacity-80'}
               `}>
                 {(membershipType === 'basic' || !membershipType) && (
-                  <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-lg absolute -top-2.5 -left-2.5 shadow-md">
+                  <div className="bg-blue-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg absolute -top-2 -left-2 md:-top-2.5 md:-left-2.5 shadow-md">
                     Current Plan
                   </div>
                 )}
-                <div className="flex items-center gap-2 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-1.5 md:gap-2 mb-2 md:mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <h4 className="text-base font-semibold text-gray-900">Basic</h4>
+                  <h4 className="text-sm md:text-base font-semibold text-gray-900">Basic</h4>
                 </div>
-                <ul className="space-y-3 mb-4">
-                  <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <ul className="space-y-1.5 md:space-y-3 mb-2 md:mb-4">
+                  <li className="flex items-start">
+                    <svg className="h-3.5 w-3.5 md:h-5 md:w-5 text-green-500 mr-1.5 md:mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-600">Access to limited A1 and A2 levels</span>
+                    <span className="text-xs md:text-sm text-gray-600 leading-tight">Access to limited A1 and A2 levels</span>
                   </li>
-                  <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <li className="flex items-start">
+                    <svg className="h-3.5 w-3.5 md:h-5 md:w-5 text-green-500 mr-1.5 md:mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-600">Save 3 words a day</span>
+                    <span className="text-xs md:text-sm text-gray-600 leading-tight">Save 3 words a day</span>
                   </li>
-                  <li className="flex items-center">
-                    <svg className="h-5 w-5 text-red-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <li className="flex items-start">
+                    <svg className="h-3.5 w-3.5 md:h-5 md:w-5 text-red-500 mr-1.5 md:mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <span className="text-gray-400">Access to premium levels (B1-B2)</span>
+                    <span className="text-xs md:text-sm text-gray-400 leading-tight">Access to premium levels (B1-B2)</span>
                   </li>
                 </ul>
-                <div className="pt-4 border-t border-gray-100">
-                  <p className="text-sm text-gray-500 mb-1">Current Plan:</p>
-                  <p className="text-lg font-semibold text-gray-800">Free</p>
+                <div className="pt-2 md:pt-4 border-t border-gray-100">
+                  <p className="text-[10px] md:text-sm text-gray-500 mb-0.5 md:mb-1">Current Plan:</p>
+                  <p className="text-sm md:text-lg font-semibold text-gray-800">Free</p>
                 </div>
               </div>
               
               {/* Premium Plan */}
-              <div className={`border-2 relative transition-all duration-300 ease-in-out rounded-lg p-5 bg-yellow-50
+              <div className={`border-2 relative transition-all duration-300 ease-in-out rounded-lg p-3 md:p-5 bg-yellow-50
                 ${membershipType === 'premium' ? 'border-yellow-500 shadow-lg' : 'border-gray-200 opacity-80'}
               `}>
                 {membershipType === 'premium' && (
-                  <div className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-lg absolute -top-2.5 -left-2.5 shadow-md">
+                  <div className="bg-yellow-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg absolute -top-2 -left-2 md:-top-2.5 md:-left-2.5 shadow-md">
                     Current Plan
                   </div>
                 )}
-                <div className="flex items-center gap-2 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-1.5 md:gap-2 mb-2 md:mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 text-yellow-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                   </svg>
-                  <h4 className="text-base font-semibold text-gray-900">Premium</h4>
+                  <h4 className="text-sm md:text-base font-semibold text-gray-900">Premium</h4>
                 </div>
-                <ul className="space-y-3 mb-4">
-                  <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <ul className="space-y-1.5 md:space-y-3 mb-2 md:mb-4">
+                  <li className="flex items-start">
+                    <svg className="h-3.5 w-3.5 md:h-5 md:w-5 text-green-500 mr-1.5 md:mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-600">Access to all levels and stories (A1-B2)</span>
+                    <span className="text-xs md:text-sm text-gray-600 leading-tight">Access to all levels and stories (A1-B2)</span>
                   </li>
-                  <li className="flex items-center">
-                    <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <li className="flex items-start">
+                    <svg className="h-3.5 w-3.5 md:h-5 md:w-5 text-green-500 mr-1.5 md:mr-3 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-600">Unlimited saved words</span>
+                    <span className="text-xs md:text-sm text-gray-600 leading-tight">Unlimited saved words</span>
                   </li>
                 </ul>
-                <div className="pt-4 border-t border-yellow-200">
-                  <p className="text-sm text-gray-500 mb-1">Plan:</p>
-                  <p className="text-lg font-semibold text-gray-800">€4.99/month</p>
+                <div className="pt-2 md:pt-4 border-t border-yellow-200">
+                  <p className="text-[10px] md:text-sm text-gray-500 mb-0.5 md:mb-1">Plan:</p>
+                  <p className="text-sm md:text-lg font-semibold text-gray-800">€4.99/month</p>
                   {subscriptionEnds && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 md:mt-1">
                       Ends: {subscriptionEnds.toLocaleDateString()}
                     </p>
                   )}
                 </div>
-                {membershipType === 'premium' && !subscriptionCancelled && (
-                  <button
-                    onClick={handleCancelSubscription}
-                    disabled={cancellingSubscription}
-                    className="mt-4 w-full py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-all flex items-center justify-center text-base font-medium disabled:opacity-50"
-                  >
-                    {cancellingSubscription ? 'Processing...' : 'Cancel Subscription'}
-                  </button>
-                )}
-                
-                {membershipType === 'premium' && subscriptionCancelled && (
-                  <div className="mt-4 space-y-3">
-                    {/* İptal durumu bilgisi - Countdown ile */}
-                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-xl p-5 shadow-lg">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                        </div>
-                        <div className="ml-4 flex-1">
-                          <p className="text-base font-bold text-orange-900 mb-2">Subscription Cancelled</p>
-                          
-                          {/* Countdown */}
-                          <div className="bg-white rounded-lg p-3 mb-2 border border-orange-200">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-600">Premium Access Remaining:</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-2xl font-bold text-orange-600">{daysRemaining}</span>
-                                <span className="text-sm text-gray-600">{daysRemaining === 1 ? 'day' : 'days'}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {cancelDate && (
-                            <p className="text-xs text-orange-700 mt-2 flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              Premium expires on <span className="font-semibold">{cancelDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Tekrar premium ol butonu */}
-                    <button 
-                      onClick={handleUpgradeToPremium}
-                      className="w-full py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-md hover:from-yellow-600 hover:to-yellow-700 transition-all flex items-center justify-center gap-2 text-base font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                      </svg>
-                      Reactivate Premium
-                    </button>
-                    
-                    {/* Teşvik mesajı */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-sm text-blue-800 text-center">
-                        <span className="font-medium">💡 Don't lose your progress!</span><br/>
-                        Reactivate now to continue unlimited learning and keep all your saved words.
-                      </p>
-                    </div>
-                  </div>
-                )}
                 {(['free', 'basic'].includes(membershipType) || !membershipType) && (
                   <button 
                     onClick={handleUpgradeToPremium}
@@ -579,6 +512,81 @@ export default function Profile() {
 
               </div>
             </div>
+            
+            {/* Subscription Management Section */}
+            {membershipType === 'premium' && !subscriptionCancelled && (
+              <div className="mt-6">
+                <h3 className="text-base md:text-lg font-medium mb-3">Subscription Management</h3>
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={cancellingSubscription}
+                  className="w-full py-2 md:py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-all flex items-center justify-center text-xs md:text-base font-medium disabled:opacity-50"
+                >
+                  {cancellingSubscription ? 'Processing...' : 'Cancel Subscription'}
+                </button>
+              </div>
+            )}
+            
+            {membershipType === 'premium' && subscriptionCancelled && (
+              <div className="mt-6 space-y-3 md:space-y-4">
+                <h3 className="text-base md:text-lg font-medium">Subscription Status</h3>
+                {/* İptal durumu bilgisi - Countdown ile */}
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-lg md:rounded-xl p-3 md:p-5 shadow-lg">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 md:w-12 md:h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-6 md:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-2 md:ml-4 flex-1 min-w-0">
+                      <p className="text-sm md:text-base font-bold text-orange-900 mb-1.5 md:mb-2">Subscription Cancelled</p>
+                      
+                      {/* Countdown */}
+                      <div className="bg-white rounded-lg p-2 md:p-3 mb-1.5 md:mb-2 border border-orange-200">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs md:text-sm text-gray-600">Premium Access Remaining:</span>
+                          <div className="flex items-center gap-1 md:gap-2">
+                            <span className="text-lg md:text-2xl font-bold text-orange-600">{daysRemaining}</span>
+                            <span className="text-xs md:text-sm text-gray-600">{daysRemaining === 1 ? 'day' : 'days'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {cancelDate && (
+                        <p className="text-[10px] md:text-xs text-orange-700 mt-1 md:mt-2 flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="truncate">Premium expires on <span className="font-semibold">{cancelDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span></span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Tekrar premium ol butonu */}
+                <button 
+                  onClick={handleUpgradeToPremium}
+                  className="w-full py-2 md:py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-md hover:from-yellow-600 hover:to-yellow-700 transition-all flex items-center justify-center gap-1.5 md:gap-2 text-xs md:text-base font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
+                  Reactivate Premium
+                </button>
+                
+                {/* Teşvik mesajı */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs md:text-sm text-blue-800 text-center">
+                    <span className="font-medium">💡 Don't lose your progress!</span><br/>
+                    Reactivate now to continue unlimited learning and keep all your saved words.
+                  </p>
+                </div>
+              </div>
+            )}
+            
             <p className={`text-center mt-3 font-medium ${membershipType === 'premium' ? 'text-yellow-500' : 'text-blue-500'}`}>
               You are currently on the {membershipType === 'premium' ? 'Premium' : 'Basic'} plan
             </p>
