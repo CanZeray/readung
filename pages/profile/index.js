@@ -356,16 +356,6 @@ export default function Profile() {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className="mb-4">
-          <Link href="/home">
-            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 group text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span className="font-medium">Back to Home</span>
-            </button>
-          </Link>
-        </div>
 
         <div className="bg-gradient-to-r from-blue-400 to-blue-600 rounded-t-lg p-6 text-white shadow-sm">
           <div className="flex items-center gap-4">

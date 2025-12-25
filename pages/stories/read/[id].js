@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
+import Navbar from '../../../components/Navbar';
 import { db } from '../../../lib/firebase';
 import { doc, getDoc, updateDoc, arrayUnion, Timestamp, collection, query, where, getDocs, addDoc, setDoc } from 'firebase/firestore';
 
@@ -71,156 +72,6 @@ Als die Sonne untergeht, wird es kühler. Die Menschen packen langsam ihre Sache
     wordCount: 250,
     readTime: 4,
   },
-};
-
-// Navbar component
-const Navbar = () => {
-  const router = useRouter();
-  const { currentUser, logout, getUserData } = useAuth();
-  const [userData, setUserData] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    async function fetchUser() {
-      if (currentUser) {
-        const data = await getUserData?.();
-        setUserData(data);
-      }
-    }
-    fetchUser();
-  }, [currentUser, getUserData]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  return (
-    <nav className="bg-gray-900 text-white px-4 py-3 shadow-md sticky top-0 z-50">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/home" className="text-3xl font-bold flex items-center group hover:scale-105 transition-transform">
-          <span className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-blue-500 group-hover:text-blue-300 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <span className="text-blue-500 font-bold group-hover:text-blue-300 transition-colors duration-300">Readung</span>
-          </span>
-        </Link>
-        
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-5">
-          {currentUser ? (
-            <>
-              <Link href="/profile" className={`font-medium cursor-pointer ${router.pathname === '/profile' ? 'text-blue-400' : ''}`}>
-                <div className="flex items-center gap-1 hover:text-blue-300 hover:bg-gray-800 transition-all duration-300 px-3 py-2 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>Profile</span>
-                </div>
-              </Link>
-              {userData?.role === 'admin' && (
-                <Link href="/admin" className="hover:text-yellow-300 transition-colors font-medium cursor-pointer">
-                  <span>Admin Paneli</span>
-                </Link>
-              )}
-              <button 
-                onClick={handleLogout} 
-                className="hover:text-red-300 hover:bg-gray-700 transition-all duration-300 py-2 px-3 rounded-lg text-left flex items-center"
-              >
-                <span>Log out</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/auth/login">
-                <span className="relative inline-block py-2 px-4 rounded-lg font-medium text-white hover:text-blue-200 transition-all duration-300 cursor-pointer group border border-transparent hover:border-blue-400 hover:bg-gray-800/50">
-                  Log In
-                  <span className="absolute inset-0 rounded-lg bg-blue-600/0 group-hover:bg-blue-600/10 transition-all duration-300 pointer-events-none"></span>
-                </span>
-              </Link>
-              <Link href="/auth/register">
-                <span className="inline-block py-2 px-4 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-500 transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5">
-                  Sign Up
-                </span>
-              </Link>
-            </>
-          )}
-        </div>
-        
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden focus:outline-none"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
-        </button>
-      </div>
-      
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden mt-2 py-3 px-4 bg-gray-800 rounded-lg border border-gray-700 animate-fade-in">
-          <div className="flex flex-col gap-3">
-            {currentUser ? (
-              <>
-                <Link href="/profile" className={`cursor-pointer ${router.pathname === '/profile' ? 'text-blue-400' : ''}`}>
-                  <div className="flex items-center gap-1 hover:text-blue-300 hover:bg-gray-700 transition-all duration-300 py-2 px-3 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span>Profile</span>
-                  </div>
-                </Link>
-                {userData?.role === 'admin' && (
-                  <Link href="/admin" className="hover:text-yellow-300 transition-colors py-2 cursor-pointer">
-                    <span>Admin Paneli</span>
-                  </Link>
-                )}
-                <button 
-                  onClick={handleLogout} 
-                  className="hover:text-red-300 transition-colors py-2 text-left flex items-center"
-                >
-                  <span>Log out</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/auth/login">
-                  <span className="relative inline-block py-2 px-4 rounded-lg text-white hover:text-blue-200 transition-all duration-300 cursor-pointer group border border-transparent hover:border-blue-400 hover:bg-gray-700/50">
-                    Log In
-                    <span className="absolute inset-0 rounded-lg bg-blue-600/0 group-hover:bg-blue-600/10 transition-all duration-300 pointer-events-none"></span>
-                  </span>
-                </Link>
-                <Link href="/auth/register">
-                  <span className="inline-block py-2 px-4 rounded-lg text-center text-white bg-blue-600 hover:bg-blue-500 transition-all duration-300 cursor-pointer shadow-md hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-0.5">
-                    Sign Up
-                  </span>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
-  );
 };
 
 // Word Saving Modal Component
@@ -434,7 +285,27 @@ export default function ReadStory() {
   const [savedWordsToday, setSavedWordsToday] = useState(0);
   const [completed, setCompleted] = useState(false);
   const contentRef = useRef(null);
-  const { currentUser, getUserData } = useAuth();
+  const { currentUser, getUserData, logout } = useAuth();
+  
+  // Logout handler - B1/B2 hikayelerindeyken doğrudan anasayfaya yönlendir
+  const handleLogout = async () => {
+    try {
+      // Hikaye seviyesini kontrol et
+      const storyLevel = story?.level?.toLowerCase() || '';
+      const isPremiumLevel = ['b1', 'b2'].includes(storyLevel);
+      
+      await logout();
+      
+      // B1 veya B2 hikayesindeyse doğrudan anasayfaya yönlendir
+      if (isPremiumLevel) {
+        router.push('/home');
+      } else {
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
   
   // Çeviri işlemleri için state değişkenleri
   const [selectedWordForTranslation, setSelectedWordForTranslation] = useState('');
@@ -605,6 +476,15 @@ export default function ReadStory() {
         } else {
           // Kullanıcı giriş yapmamış ve ücretli hikaye ise
           if (isPremiumLevel || requiresPremiumForA1A2) {
+            // Logout sonrası ise uyarı göstermeden doğrudan anasayfaya yönlendir
+            // currentUser değişikliği logout sonrası olabilir, bu durumda uyarı göstermeden yönlendir
+            if (isPremiumLevel) {
+              // B1 veya B2 hikayesindeyse doğrudan anasayfaya yönlendir
+              router.push('/home');
+              setLoading(false);
+              return;
+            }
+            
             if (requiresPremiumForA1A2) {
               alert('Bu hikaye için premium üyelik gereklidir. Premium üyelik satın almak için lütfen giriş yapın.');
               router.push('/auth/login');
@@ -1096,7 +976,7 @@ Grammatical role: Not available
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <Navbar onLogout={handleLogout} />
         <main className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
           <p>Loading story...</p>
         </main>
@@ -1107,7 +987,7 @@ Grammatical role: Not available
   if (!story) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        <Navbar onLogout={handleLogout} />
         <main className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Story Not Found</h1>
@@ -1133,19 +1013,9 @@ Grammatical role: Not available
         <title>{story.title} - Readung</title>
       </Head>
 
-      <Navbar />
+      <Navbar onLogout={handleLogout} />
 
       <main className="flex-grow container mx-auto px-2 sm:px-4 py-8">
-        <button 
-          onClick={handleGoBack}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 mb-2 group text-sm"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span className="font-medium">Back to Stories</span>
-        </button>
-
         <div className="card p-4 sm:p-6">
           <div className="mb-2">
             <h1 className="text-2xl sm:text-3xl font-bold break-words">{story.title}</h1>
@@ -1319,14 +1189,10 @@ Grammatical role: Not available
       {/* Çeviri sonucu kutusu */}
       {showTranslation && (
         <div 
-          className="translation-box fixed z-50 max-w-xs"
+          className="translation-box fixed z-50 max-w-xs bg-gradient-to-br from-orange-50 to-amber-50 md:bg-white border-2 border-orange-300 md:border-orange-200 rounded-xl shadow-lg md:shadow-xl"
           style={{ 
             right: 32,
             bottom: 32,
-            background: '#f9fafb',
-            border: '1px solid #e5e7eb',
-            borderRadius: 12,
-            boxShadow: '0px 4px 20px rgba(0,0,0,0.08)',
             padding: 16,
             textAlign: 'left'
           }}

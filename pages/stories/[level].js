@@ -15,6 +15,7 @@ export default function StoryList() {
   const [membershipType, setMembershipType] = useState('free');
   const [loading, setLoading] = useState(true);
   const [completedStories, setCompletedStories] = useState([]);
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const { currentUser, getUserData } = useAuth();
 
   useEffect(() => {
@@ -305,15 +306,6 @@ export default function StoryList() {
       <Navbar />
 
       <main className="flex-grow container mx-auto px-4 py-8">
-        <button
-          onClick={() => router.push('/home')}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-200 mb-2 group text-sm"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600 group-hover:text-gray-800 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span className="font-medium">Back to Homepage</span>
-        </button>
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{levelName} Stories</h1>
           <p className="mb-6">
@@ -380,17 +372,63 @@ export default function StoryList() {
                       </div>
                     </div>
                   )}
-                  {isCompleted && (
-                    <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg z-10">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Completed
-                    </div>
-                  )}
                   <div className="p-6 flex flex-col h-full">
-                    <h2 className="text-xl font-bold mb-3 pb-3 border-b border-gray-200">{story.title}</h2>
-                    <p className="text-gray-600 mb-4">{story.description}</p>
+                    <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-200">
+                      <h2 className="text-xl font-bold flex-1 pr-2">{story.title}</h2>
+                      {isCompleted && (() => {
+                        const levelLower = level?.toLowerCase() || 'a1';
+                        const badgeColors = {
+                          a1: 'bg-green-500 hover:bg-green-600',
+                          a2: 'bg-teal-500 hover:bg-teal-600',
+                          b1: 'bg-orange-500 hover:bg-orange-600',
+                          b2: 'bg-rose-500 hover:bg-rose-600',
+                        };
+                        const badgeColor = badgeColors[levelLower] || badgeColors.a1;
+                        return (
+                          <div className={`${badgeColor} text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg flex-shrink-0`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Completed
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div className="mb-4">
+                      <p 
+                        className={`text-gray-600 ${expandedDescriptions[story.id] ? '' : 'line-clamp-2 md:line-clamp-none'} transition-all duration-300`}
+                      >
+                        {story.description}
+                      </p>
+                      {story.description && story.description.length > 100 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedDescriptions(prev => ({
+                              ...prev,
+                              [story.id]: !prev[story.id]
+                            }));
+                          }}
+                          className="md:hidden mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 transition-colors"
+                        >
+                          {expandedDescriptions[story.id] ? (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                              </svg>
+                              Show Less
+                            </>
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                              Show More
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                     <div className="mt-auto">
                       <div className="flex justify-between text-sm text-gray-500 mb-4">
                         <span className="flex items-center">

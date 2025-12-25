@@ -72,24 +72,24 @@ const VocabularyCard = ({ word, onRemove, index }) => {
 
   return (
     <div className="relative group">
-      <div className="bg-gradient-to-br from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 rounded-xl p-5 transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 border border-gray-200 hover:border-gray-300">
+      <div className="bg-gradient-to-br from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 rounded-lg md:rounded-xl p-3 md:p-5 transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 border border-gray-200 hover:border-gray-300">
         {/* Silme butonu */}
         <button 
           onClick={handleDelete}
-          className="absolute top-4 right-4 text-red-400 hover:text-red-600 transition-colors opacity-70 hover:opacity-100 bg-red-50 hover:bg-red-100 rounded-full p-1.5"
+          className="absolute top-2 right-2 md:top-4 md:right-4 text-red-400 hover:text-red-600 transition-colors opacity-70 hover:opacity-100 bg-red-50 hover:bg-red-100 rounded-full p-1 md:p-1.5"
           aria-label="Remove word"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
         </button>
         
         {/* Kelime bilgileri */}
-        <div className="pr-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-gray-900 transition-colors">
+        <div className="pr-6 md:pr-8">
+          <h3 className="text-base md:text-xl font-bold text-gray-800 mb-1 md:mb-2 group-hover:text-gray-900 transition-colors">
             {typeof word.word === 'string' ? word.word : (word.word?.word || 'Unknown')}
           </h3>
-          <p className="text-gray-600 mb-3 font-medium">
+          <p className="text-gray-600 mb-2 md:mb-3 font-medium text-sm md:text-base">
             {(() => {
               if (!word.translation) return 'No translation';
               if (typeof word.translation === 'string') return word.translation;
@@ -103,8 +103,8 @@ const VocabularyCard = ({ word, onRemove, index }) => {
           </p>
           
           {/* Ekleme tarihi */}
-          <div className="flex items-center text-xs text-gray-500">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center text-[10px] md:text-xs text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             {word.dateAdded ? new Date(word.dateAdded).toLocaleDateString() : "Recently added"}
@@ -307,24 +307,25 @@ export default function Vocabulary() {
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="mb-6 max-w-6xl mx-auto">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg mb-8">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl md:rounded-2xl p-3 md:p-6 text-white shadow-lg mb-4 md:mb-8">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <div className="flex items-center flex-1 min-w-0">
                 <Link href="/home">
-                  <span className="inline-flex items-center gap-2 text-white hover:text-blue-100 transition-colors mr-6 bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <span className="inline-flex items-center gap-1 md:gap-2 text-white hover:text-blue-100 transition-colors mr-3 md:mr-6 bg-white/20 hover:bg-white/30 rounded-lg px-2 md:px-3 py-1.5 md:py-2 cursor-pointer text-xs md:text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    <span>Back to Home</span>
+                    <span className="hidden sm:inline">Back to Home</span>
+                    <span className="sm:hidden">Back</span>
                   </span>
                 </Link>
-                <div>
-                  <h1 className="text-3xl font-bold">My Vocabulary</h1>
-                  <p className="text-blue-100 mt-1">{filteredWords.length} words saved</p>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg md:text-3xl font-bold truncate">My Vocabulary</h1>
+                  <p className="text-blue-100 mt-0.5 md:mt-1 text-xs md:text-base">{filteredWords.length} words saved</p>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
@@ -376,7 +377,7 @@ export default function Vocabulary() {
 
           {/* Vocabulary List - Kart Görünümü */}
           {filteredWords.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3">
               {filteredWords.map((word, index) => (
                 <VocabularyCard 
                   key={index} 
